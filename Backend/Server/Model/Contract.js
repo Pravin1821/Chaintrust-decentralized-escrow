@@ -1,0 +1,56 @@
+const mongoose = require('mongoose');
+const contractSchema = new mongoose.Schema({
+    client:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true  
+    },
+    freelancer:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        default: null
+    },
+    title:{
+        type: String,
+        required: true,
+    },
+    description:{
+        type: String,
+        required: true,
+    },
+    amount:{
+        type: Number,
+        required: true,
+        min: 0
+    },
+    deadline:{
+        type: Date,
+        required: true
+    },
+    status:{
+        type: String,
+        enum: ["Created", "Assigned", "Funded", "Submitted", "Approved", "Paid", "Disputed", "Resolved"],
+        default: "Created"
+    },
+    blockchainContrctId:{
+        type: Number,
+        default: null
+    },
+    escrowAddress:{
+        type: String,
+        default: null
+    },
+    ipfsHash:{
+        type: String,
+        default: null
+    },
+    createdAt:{
+        type: Date,
+        default: Date.now
+    },
+    updatedAt:{
+        type: Date,
+        default: Date.now
+    }
+});
+module.exports = mongoose.model('Contract', contractSchema);

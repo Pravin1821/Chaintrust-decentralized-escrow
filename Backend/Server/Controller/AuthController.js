@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 exports.register = async (req, res) => {
     try {
-        const { username, email, password, role, walletAddress } = req.body;
+        const { username, email, password, role, walletAddress, permissions, department } = req.body;
         const existingUser = await user.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: 'User already exists' });
@@ -13,9 +13,16 @@ exports.register = async (req, res) => {
             username,
             email,
             password: hashedPassword,
-            role,
+            role: role || 'client',
             walletAddress
         });
+        if(role === 'admin'){
+            newUser.permissions = permissions || [];
+            newUser.department = department || null;
+        }
+        else{
+            newUser.walletAddress = walletAddress || null;
+        }
         await newUser.save();
         res.status(201).json({ 
             _id: newUser._id,
@@ -46,7 +53,7 @@ exports.login = async (req, res) => {
         const token = jwt.sign(
             { userId: existingUser._id, role: existingUser.role },
             process.env.JWT_SECRET,
-            { expiresIn: '1h' }
+            { expiresIn: '1d' }
         );
         res.status(200).json({ 
             _id: existingUser._id,
@@ -63,4 +70,27 @@ exports.login = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: 'Server error' });
     }   
+};
+exports.update = async (req, res) => {
+    try{
+        const updateuser = req.body;
+        if(req.body.password)
+        {
+            req.body.password = await bcrypt.hash(req.body.password, 10);
+        }
+        const updatedUser = await user.findByIdAndUpdate(req.user._id, updateuser, { new: true }).select('-password');
+        res.status(200).json(updatedUser);
+    }
+    catch(error){
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+exports.getProfile = async (req, res) => {
+    try{
+        const currentUser = await user.findById(req.user._id).select('-password');
+        res.status(200).json(currentUser);
+    }
+    catch(error){
+        res.status(500).json({ message: 'Server error' });
+    }
 };

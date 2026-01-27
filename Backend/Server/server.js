@@ -9,7 +9,9 @@ mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('MongoDB connected'))
     .catch(err => console.log(err));
 const authRouter = require('./Routers/AuthRouter');
+const contractRouter = require('./Routers/ContractRouter');
 app.use('/api/auth', authRouter);
+app.use('/api/contracts', contractRouter);
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });

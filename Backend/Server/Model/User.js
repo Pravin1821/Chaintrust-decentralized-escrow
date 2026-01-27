@@ -42,6 +42,14 @@ const userSchema = new mongoose.Schema({
     createdAt:{
         type: Date,
         default: Date.now
+    },
+    permissions: {
+        type: [String], 
+        default: []
+    },
+    department: {
+        type: String,
+        default: null
     }
 });
 module.exports = mongoose.model('User', userSchema);
