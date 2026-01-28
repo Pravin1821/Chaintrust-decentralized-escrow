@@ -10,6 +10,17 @@ const contractSchema = new mongoose.Schema({
         ref: 'User',
         default: null
     },
+    applications: [
+    {
+        freelancer: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User"
+        },
+        appliedAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
     title:{
         type: String,
         required: true,
