@@ -51,8 +51,20 @@ const contractSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    escrowStatus:{
+        type: String,
+        enum: ["NotFunded", "Funded","Refunded"],
+        default: "NotFunded"
+    },
+    fundedAt:{
+        type: Date,
+    },
     ipfsHash:{
         type: String,
+        default: null
+    },
+    submittedAt:{
+        type: Date,
         default: null
     },
     createdAt:{
@@ -62,6 +74,14 @@ const contractSchema = new mongoose.Schema({
     updatedAt:{
         type: Date,
         default: Date.now
+    },
+    approvedAt:{
+        type: Date,
+        default: null
+    },
+    paidAt:{
+        type: Date,
+        default: null
     }
 });
 module.exports = mongoose.model('Contract', contractSchema);

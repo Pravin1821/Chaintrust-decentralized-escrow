@@ -42,11 +42,9 @@ exports.assignFreelancer = async (req, res) => {
       return res.status(403).json({ message: "Unauthorized" });
     }
     if (existingContract.status !== "Created") {
-      return res
-        .status(400)
-        .json({
-          message: "Freelancer can only be assigned to Created contracts",
-        });
+      return res.status(400).json({
+        message: "Freelancer can only be assigned to Created contracts",
+      });
     }
     const hasApplied = existingContract.applications.some(
       (app) => app.freelancer.toString() === freelancerId,
@@ -63,6 +61,64 @@ exports.assignFreelancer = async (req, res) => {
     res
       .status(200)
       .json({ message: "Freelancer assigned successfully", existingContract });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.fundContract = async (req, res) => {
+  try {
+    const contractId = req.params.id;
+    const existingContract = await Contract.findById(contractId);
+    if (!existingContract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+    if (existingContract.client.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    if (existingContract.status !== "Assigned") {
+      return res
+        .status(400)
+        .json({ message: "Only Assigned contracts can be funded" });
+    }
+    existingContract.status = "Funded";
+    existingContract.fundedAt = Date.now();
+    existingContract.escrowStatus = "Funded";
+    existingContract.updatedAt = Date.now();
+    await existingContract.save();
+    res
+      .status(200)
+      .json({ message: "Contract funded successfully", existingContract });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.approveWork = async (req, res) => {
+  try {
+    const contractId = req.params.id;
+    const existingContract = await Contract.findById(contractId);
+    if (!existingContract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+    if (existingContract.client.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    if (existingContract.status !== "Submitted") {
+      return res
+        .status(400)
+        .json({ message: "Only Submitted contracts can be approved" });
+    }
+    existingContract.status = "Approved";
+    existingContract.approvedAt = Date.now();
+    existingContract.updatedAt = Date.now();
+    // web3 hooks will go here later
+    existingContract.status = "Paid";
+    existingContract.paidAt = Date.now();
+    await existingContract.save();
+    res
+      .status(200)
+      .json({ message: "Work approved successfully", existingContract });
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

@@ -16,15 +16,22 @@ exports.getAssignedContracts = async (req, res) => {
 exports.submitWork = async (req, res) => {
     try{
         const { contractId, ipfsHash } = req.body;
-        const existingContract = await contract.findOne({'_id': contractId, 'freelancer': req.user._id});
-        if(!existingContract){
-            return res.status(404).json({message: "Contract not found"});
+        if(!ipfsHash){
+            return res.status(400).json({ message: "IPFS hash is required"});
         }
-        if(existingContract.status !== "Assigned"){
-            return res.status(400).json({message: "Work can only be submitted for Assigned contracts"});
+        const existingContract = await contract.findById(contractId);
+        if(!existingContract){
+            return res.status(404).json({ message: "Contract not found"});
+        }
+        if(existingContract.freelancer.toString() !== req.user._id.toString()){
+            return res.status(403).json({ message: "Unauthorized"});
+        }
+        if(existingContract.status !== "Funded"){
+            return res.status(400).json({ message: "Work can only be submitted for Funded contracts"});
         }
         existingContract.ipfsHash = ipfsHash;
         existingContract.status = "Submitted";
+        existingContract.submittedAt = Date.now();
         existingContract.updatedAt = Date.now();
         await existingContract.save();
         res.status(200).json({ message: "Work submitted successfully", existingContract });
