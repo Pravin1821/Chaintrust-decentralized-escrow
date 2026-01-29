@@ -68,28 +68,18 @@ exports.assignFreelancer = async (req, res) => {
 
 exports.fundContract = async (req, res) => {
   try {
-    const contractId = req.params.id;
-    const existingContract = await Contract.findById(contractId);
-    if (!existingContract) {
-      return res.status(404).json({ message: "Contract not found" });
+    const contract = req.contract;
+    if(contract.client.toString() !== req.user._id.toString()){
+        return res.status(403).json({message: "Unauthorized"});
     }
-    if (existingContract.client.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Unauthorized" });
-    }
-    if (existingContract.status !== "Assigned") {
-      return res
-        .status(400)
-        .json({ message: "Only Assigned contracts can be funded" });
-    }
-    existingContract.status = "Funded";
-    existingContract.fundedAt = Date.now();
-    existingContract.escrowStatus = "Funded";
-    existingContract.updatedAt = Date.now();
-    await existingContract.save();
-    res
-      .status(200)
-      .json({ message: "Contract funded successfully", existingContract });
+    contract.status = "Funded";
+    contract.escrowStatus = "Funded";
+    contract.fundedAt = Date.now();
+    contract.updatedAt = Date.now();
+    await contract.save();
+    res.status(200).json({ message: "Contract funded successfully", contract });
   } catch (error) {
+    console.error(error);
     res.status(500).json({ message: "Server error" });
   }
 };
