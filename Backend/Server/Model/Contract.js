@@ -82,6 +82,11 @@ const contractSchema = new mongoose.Schema({
     paidAt:{
         type: Date,
         default: null
+    },
+    dispute:{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Dispute',
+        default: null
     }
 });
 module.exports = mongoose.model('Contract', contractSchema);
