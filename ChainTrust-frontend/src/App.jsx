@@ -1,0 +1,46 @@
+import { Route, Routes, Navigate } from "react-router-dom";
+import Auth from "./pages/auth/Auth.jsx";
+import ProtectedRoute from "./routes/ProtectedRoute.jsx";
+import ClientLayout from "./layouts/ClientLayout.jsx";
+import Dashboard from "./pages/client/Dashboard.jsx";
+import CreateContract from "./pages/client/CreateContract.jsx";
+import MyContracts from "./pages/client/MyContracts.jsx";
+import ContractDetails from "./pages/client/ContractDetails.jsx";
+import Wallet from "./pages/client/Wallet.jsx";
+import Disputes from "./pages/client/Disputes.jsx";
+import Profile from "./pages/client/Profile.jsx";
+import FreelancerDashboard from "./pages/FreelancerDashboard.jsx";
+import AdminDashboard from "./pages/AdminDashboard.jsx";
+
+function App() {
+  return (
+    <Routes>
+      {/* Public */}
+      <Route path="/login" element={<Auth />} />
+      <Route path="/register" element={<Auth />} />
+
+      {/* Protected role-based routes */}
+      <Route element={<ProtectedRoute allowedRoles={["client"]} />}>
+        <Route element={<ClientLayout />}>
+          <Route path="/client/dashboard" element={<Dashboard />} />
+          <Route path="/client/create" element={<CreateContract />} />
+          <Route path="/client/contracts" element={<MyContracts />} />
+          <Route path="/client/contracts/:id" element={<ContractDetails />} />
+          <Route path="/client/wallet" element={<Wallet />} />
+          <Route path="/client/disputes" element={<Disputes />} />
+          <Route path="/client/profile" element={<Profile />} />
+        </Route>
+      </Route>
+      <Route element={<ProtectedRoute allowedRoles={["freelancer"]} />}>
+        <Route path="/freelancer/dashboard" element={<FreelancerDashboard />} />
+      </Route>
+      <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      </Route>
+
+      <Route path="*" element={<Navigate to="/login" />} />
+    </Routes>
+  );
+}
+
+export default App;
