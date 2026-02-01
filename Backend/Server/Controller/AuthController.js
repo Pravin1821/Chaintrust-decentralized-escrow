@@ -94,16 +94,30 @@ exports.login = async (req, res) => {
 };
 exports.update = async (req, res) => {
   try {
-    const updateuser = req.body;
+    const payload = {};
+    if (typeof req.body.username === "string")
+      payload.username = req.body.username.trim();
+    if (typeof req.body.email === "string")
+      payload.email = req.body.email.trim();
+    if (typeof req.body.walletAddress === "string")
+      payload.walletAddress = req.body.walletAddress.trim();
     if (req.body.password) {
-      req.body.password = await bcrypt.hash(req.body.password, 10);
+      payload.password = await bcrypt.hash(req.body.password, 10);
     }
+
     const updatedUser = await user
-      .findByIdAndUpdate(req.user._id, updateuser, { new: true })
+      .findByIdAndUpdate(req.user._id, payload, {
+        new: true,
+        runValidators: true,
+      })
       .select("-password");
     res.status(200).json(updatedUser);
   } catch (error) {
-    res.status(500).json({ message: "Server error" });
+    if (error && error.code === 11000) {
+      return res.status(400).json({ message: "Email already exists" });
+    }
+    console.error("[AuthController] Update error:", error);
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 };
 exports.getProfile = async (req, res) => {

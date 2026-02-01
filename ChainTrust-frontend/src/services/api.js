@@ -11,16 +11,19 @@ export const authService = {
 export const clientContractService = {
   createContract: (payload) => api.post("/contracts/createContract", payload),
   getContracts: () => api.get("/contracts/getContracts"),
-  assignFreelancer: (id, payload) => api.post(`/contracts/assignFreelancer/${id}`, payload),
-  fundContract: (id, payload) => api.post(`/contracts/fundContract/${id}`, payload),
+  assignFreelancer: (id, payload) =>
+    api.post(`/contracts/assignFreelancer/${id}`, payload),
+  fundContract: (id, payload) =>
+    api.post(`/contracts/fundContract/${id}`, payload),
   approveWork: (id) => api.post(`/contracts/approveWork/${id}`),
 };
 
 // Freelancer
 export const freelancerService = {
-  myContracts: () => api.get("/freelancer/contracts"),
+  // Backend route is /freelancer/assignedContracts
+  myContracts: () => api.get("/freelancer/assignedContracts"),
   apply: (id, payload) => api.post(`/freelancer/apply/${id}`, payload),
-  submitWork: (id, payload) => api.post(`/freelancer/submitWork/${id}`, payload),
+  submitWork: (id, payload) => api.post(`/freelancer/submitWork`, payload),
 };
 
 // Disputes

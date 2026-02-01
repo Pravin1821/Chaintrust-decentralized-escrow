@@ -16,7 +16,11 @@ export default function Dashboard() {
         const total = list.length;
         const funded = list.filter((c) => c.status === "Funded").length;
         const completed = list.filter((c) => c.status === "Paid").length;
-        const active = list.filter((c) => ["Assigned", "Funded", "Submitted", "Approved", "Disputed"].includes(c.status)).length;
+        const active = list.filter((c) =>
+          ["Assigned", "Funded", "Submitted", "Approved", "Disputed"].includes(
+            c.status,
+          ),
+        ).length;
         const escrowLocked = list
           .filter((c) => c.escrowStatus === "Funded")
           .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
@@ -28,14 +32,24 @@ export default function Dashboard() {
             id: c._id,
             title: c.title,
             amount: c.amount,
-            currency: c.currency || "USD",
+            currency: c.currency || "INR",
+            paymentType: c.paymentType,
             status: c.status,
-            deadline: c.deadline ? new Date(c.deadline).toLocaleDateString() : "",
+            deadline: c.deadline
+              ? new Date(c.deadline).toLocaleDateString()
+              : "",
           }));
         setStats({ total, active, funded, completed, escrowLocked, recent });
       } catch (e) {
         setError("Failed to load dashboard from server");
-        setStats({ total: 0, active: 0, funded: 0, completed: 0, escrowLocked: 0, recent: [] });
+        setStats({
+          total: 0,
+          active: 0,
+          funded: 0,
+          completed: 0,
+          escrowLocked: 0,
+          recent: [],
+        });
       } finally {
         setLoading(false);
       }
@@ -105,7 +119,7 @@ export default function Dashboard() {
                 <tr key={r.id} className="border-t border-gray-800/50">
                   <td className="py-2 pr-4 text-gray-200">{r.title}</td>
                   <td className="py-2 pr-4 text-gray-300">
-                    {r.amount} {r.currency}
+                    {formatAmount(r.amount, r.paymentType, r.currency)}
                   </td>
                   <td className="py-2 pr-4">
                     <StatusBadge status={r.status} />
@@ -136,4 +150,21 @@ function Card({ title, value, icon, color }) {
       </div>
     </div>
   );
+}
+
+function formatAmount(amount, paymentType, currency) {
+  const amtNum = Number(amount) || 0;
+  if (paymentType === "ETH") {
+    const eth = amtNum.toFixed(4).replace(/\.0+$/, "");
+    return `${eth} ETH`;
+  }
+  const cur = currency || "INR";
+  try {
+    const formatted = new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 2,
+    }).format(amtNum);
+    return `${formatted} ${cur}`;
+  } catch {
+    return `${amtNum} ${cur}`;
+  }
 }

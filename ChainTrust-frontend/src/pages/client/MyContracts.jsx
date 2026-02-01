@@ -28,7 +28,9 @@ export default function MyContracts() {
     const freelancerId = prompt("Enter freelancer ID/address to assign:");
     if (!freelancerId) return;
     try {
-      await clientContractService.assignFreelancer(item._id || item.id, { freelancerId });
+      await clientContractService.assignFreelancer(item._id || item.id, {
+        freelancerId,
+      });
       alert("✅ Assigned successfully");
     } catch (e) {
       alert(e.response?.data?.message || "Failed to assign");
@@ -39,7 +41,9 @@ export default function MyContracts() {
     const amount = prompt("Enter amount to fund (number):", item.amount);
     if (!amount) return;
     try {
-      await clientContractService.fundContract(item._id || item.id, { amount: Number(amount) });
+      await clientContractService.fundContract(item._id || item.id, {
+        amount: Number(amount),
+      });
       alert("✅ Funded successfully (UI simulation)");
     } catch (e) {
       alert(e.response?.data?.message || "Failed to fund");

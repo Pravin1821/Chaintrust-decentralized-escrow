@@ -46,11 +46,15 @@ export default function ContractDetails() {
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <InfoCard
           title="Amount"
-          value={`${item.amount} ${item.currency}`}
+          value={formatAmount(item.amount, item.paymentType, item.currency)}
           icon="💰"
         />
         <InfoCard title="Deadline" value={item.deadline} icon="📅" />
-        <InfoCard title="Freelancer" value={item.freelancer || "—"} icon="👤" />
+        <InfoCard
+          title="Freelancer"
+          value={getFreelancerDisplay(item.freelancer)}
+          icon="👤"
+        />
       </section>
 
       <section className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
@@ -99,15 +103,21 @@ export default function ContractDetails() {
             </a>
           </p>
           <div className="mt-3 flex gap-2">
-            <button className="px-3 py-1.5 text-xs rounded-lg bg-cyan-600/80 hover:bg-cyan-500">
-              Fund Escrow
-            </button>
-            <button className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600/80 hover:bg-emerald-500">
-              Approve
-            </button>
-            <button className="px-3 py-1.5 text-xs rounded-lg bg-red-600/80 hover:bg-red-500">
-              Reject
-            </button>
+            {item.status === "Assigned" && item.escrowStatus !== "Funded" && (
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-cyan-600/80 hover:bg-cyan-500">
+                Fund Escrow
+              </button>
+            )}
+            {item.status === "Submitted" && (
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600/80 hover:bg-emerald-500">
+                Approve
+              </button>
+            )}
+            {item.status === "Submitted" && (
+              <button className="px-3 py-1.5 text-xs rounded-lg bg-red-600/80 hover:bg-red-500">
+                Reject
+              </button>
+            )}
           </div>
           <p className="mt-2 text-xs text-gray-400">
             Actions are UI-only for now.
@@ -130,4 +140,30 @@ function InfoCard({ title, value, icon }) {
       </div>
     </div>
   );
+}
+
+function formatAmount(amount, paymentType, currency) {
+  const amtNum = Number(amount) || 0;
+  if (paymentType === "ETH") {
+    const eth = amtNum.toFixed(4).replace(/\.0+$/, "");
+    return `${eth} ETH`;
+  }
+  const cur = currency || "INR";
+  try {
+    const formatted = new Intl.NumberFormat("en-IN", {
+      maximumFractionDigits: 2,
+    }).format(amtNum);
+    return `${formatted} ${cur}`;
+  } catch {
+    return `${amtNum} ${cur}`;
+  }
+}
+
+function getFreelancerDisplay(freelancer) {
+  if (freelancer && typeof freelancer === "object") {
+    const name = freelancer.name || freelancer.username || "Unnamed";
+    const email = freelancer.email ? ` (${freelancer.email})` : "";
+    return `${name}${email}`;
+  }
+  return "Not Assigned";
 }

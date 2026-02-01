@@ -9,7 +9,11 @@ import ContractDetails from "./pages/client/ContractDetails.jsx";
 import Wallet from "./pages/client/Wallet.jsx";
 import Disputes from "./pages/client/Disputes.jsx";
 import Profile from "./pages/client/Profile.jsx";
-import FreelancerDashboard from "./pages/FreelancerDashboard.jsx";
+import FreelancerDashboard from "./pages/freelancer/Dashboard.jsx";
+import FreelancerLayout from "./layouts/FreelancerLayout.jsx";
+import FreelancerMyContracts from "./pages/freelancer/MyContracts.jsx";
+import FreelancerContractDetails from "./pages/freelancer/ContractDetails.jsx";
+import FreelancerEarnings from "./pages/freelancer/Earnings.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 function App() {
@@ -22,6 +26,7 @@ function App() {
       {/* Protected role-based routes */}
       <Route element={<ProtectedRoute allowedRoles={["client"]} />}>
         <Route element={<ClientLayout />}>
+          <Route path="/profile" element={<Profile />} />
           <Route path="/client/dashboard" element={<Dashboard />} />
           <Route path="/client/create" element={<CreateContract />} />
           <Route path="/client/contracts" element={<MyContracts />} />
@@ -32,7 +37,22 @@ function App() {
         </Route>
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["freelancer"]} />}>
-        <Route path="/freelancer/dashboard" element={<FreelancerDashboard />} />
+        <Route element={<FreelancerLayout />}>
+          <Route path="/profile" element={<Profile />} />
+          <Route
+            path="/freelancer/dashboard"
+            element={<FreelancerDashboard />}
+          />
+          <Route
+            path="/freelancer/contracts"
+            element={<FreelancerMyContracts />}
+          />
+          <Route
+            path="/freelancer/contracts/:id"
+            element={<FreelancerContractDetails />}
+          />
+          <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
+        </Route>
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
         <Route path="/admin/dashboard" element={<AdminDashboard />} />

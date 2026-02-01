@@ -36,10 +36,15 @@ export default function Disputes() {
         <div className="bg-red-900/20 border border-red-500/30 text-red-200 p-3 rounded-lg">
           <div className="font-semibold">{error}</div>
           {errorStatus === 401 && (
-            <p className="mt-1 text-sm text-red-200/90">You are not logged in. Please sign in to view your disputes.</p>
+            <p className="mt-1 text-sm text-red-200/90">
+              You are not logged in. Please sign in to view your disputes.
+            </p>
           )}
           {errorStatus === 403 && (
-            <p className="mt-1 text-sm text-red-200/90">Your role is not permitted for this view. Disputes are available to clients and freelancers.</p>
+            <p className="mt-1 text-sm text-red-200/90">
+              Your role is not permitted for this view. Disputes are available
+              to clients and freelancers.
+            </p>
           )}
         </div>
       )}

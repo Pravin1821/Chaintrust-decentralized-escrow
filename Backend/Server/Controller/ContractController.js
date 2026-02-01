@@ -21,9 +21,9 @@ exports.createContract = async (req, res) => {
 
 exports.getContractById = async (req, res) => {
   try {
-    const contracts = await Contract.find({ client: req.user._id }).sort({
-      createdAt: -1,
-    });
+    const contracts = await Contract.find({ client: req.user._id })
+      .populate({ path: "freelancer", select: "username email name" })
+      .sort({ createdAt: -1 });
     res.status(200).json(contracts);
   } catch (error) {
     res.status(500).json({ message: "Server error" });
@@ -69,8 +69,8 @@ exports.assignFreelancer = async (req, res) => {
 exports.fundContract = async (req, res) => {
   try {
     const contract = req.contract;
-    if(contract.client.toString() !== req.user._id.toString()){
-        return res.status(403).json({message: "Unauthorized"});
+    if (contract.client.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
     contract.status = "Funded";
     contract.escrowStatus = "Funded";

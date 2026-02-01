@@ -8,7 +8,7 @@ const linkClass = ({ isActive }) =>
       : "text-gray-300 hover:text-cyan-200 hover:bg-gray-800/60"
   }`;
 
-export default function Sidebar() {
+export default function FreelancerSidebar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -32,27 +32,19 @@ export default function Sidebar() {
       </button>
 
       <nav>
-        <NavLink to="/client/dashboard" className={linkClass}>
+        <NavLink to="/freelancer/dashboard" className={linkClass}>
           <span>📊</span>
           <span>Dashboard</span>
         </NavLink>
-        <NavLink to="/client/contracts" className={linkClass}>
+        <NavLink to="/freelancer/contracts" className={linkClass}>
           <span>📄</span>
           <span>My Contracts</span>
         </NavLink>
-        <NavLink to="/client/create" className={linkClass}>
-          <span>🛠️</span>
-          <span>Create Contract</span>
+        <NavLink to="/freelancer/earnings" className={linkClass}>
+          <span>💸</span>
+          <span>Earnings</span>
         </NavLink>
-        <NavLink to="/client/wallet" className={linkClass}>
-          <span>👛</span>
-          <span>Wallet & Escrow</span>
-        </NavLink>
-        <NavLink to="/client/disputes" className={linkClass}>
-          <span>⚖️</span>
-          <span>Disputes</span>
-        </NavLink>
-        <NavLink to="/client/profile" className={linkClass}>
+        <NavLink to="/profile" className={linkClass}>
           <span>👤</span>
           <span>Profile</span>
         </NavLink>
