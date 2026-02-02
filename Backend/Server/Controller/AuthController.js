@@ -138,3 +138,17 @@ exports.me = async (req, res) => {
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };
+
+exports.getUserById = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const targetUser = await user.findById(userId).select("-password");
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json(targetUser);
+  } catch (error) {
+    console.error("[AuthController] GetUserById error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

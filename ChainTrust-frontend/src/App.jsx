@@ -9,6 +9,7 @@ import ContractDetails from "./pages/client/ContractDetails.jsx";
 import Wallet from "./pages/client/Wallet.jsx";
 import Disputes from "./pages/client/Disputes.jsx";
 import Profile from "./pages/client/Profile.jsx";
+import ClientMarketplace from "./pages/client/Marketplace.jsx";
 import FreelancerProfile from "./pages/freelancer/Profile.jsx";
 import FreelancerDashboard from "./pages/freelancer/Dashboard.jsx";
 import FreelancerLayout from "./layouts/FreelancerLayout.jsx";
@@ -36,6 +37,7 @@ function App() {
           <Route path="/client/wallet" element={<Wallet />} />
           <Route path="/client/disputes" element={<Disputes />} />
           <Route path="/client/profile" element={<Profile />} />
+          <Route path="/client/marketplace" element={<ClientMarketplace />} />
         </Route>
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["freelancer"]} />}>

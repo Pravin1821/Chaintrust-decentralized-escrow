@@ -1,14 +1,53 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const {protect} = require('../Middleware/AuthMiddleware');
-const {authorizeRoles} = require('../Middleware/RoleMiddleware');
-const contractController = require('../Controller/ContractController');
-const {enforceContractState} = require('../Middleware/ContractStateMiddleware');
-router.post('/createContract', protect, authorizeRoles('client'), contractController.createContract);
-router.get('/getContracts', protect, authorizeRoles('client'), contractController.getContractById);
-router.post('/assignFreelancer/:id', protect, authorizeRoles('client'), contractController.assignFreelancer);
-router.post('/fundContract/:id', protect, authorizeRoles('client'),   enforceContractState("Assigned"),contractController.fundContract);
-router.post('/approveWork/:id', protect, authorizeRoles('client'), enforceContractState("Submitted"), contractController.approveWork);
-router.get('/marketpalce',protect, authorizeRoles('freelancer'), contractController.getMarketplaceContracts);
+const { protect } = require("../Middleware/AuthMiddleware");
+const { authorizeRoles } = require("../Middleware/RoleMiddleware");
+const contractController = require("../Controller/ContractController");
+const {
+  enforceContractState,
+} = require("../Middleware/ContractStateMiddleware");
+router.post(
+  "/createContract",
+  protect,
+  authorizeRoles("client"),
+  contractController.createContract,
+);
+router.get(
+  "/getContracts",
+  protect,
+  authorizeRoles("client"),
+  contractController.getContractById,
+);
+router.post(
+  "/assignFreelancer/:id",
+  protect,
+  authorizeRoles("client"),
+  contractController.assignFreelancer,
+);
+router.post(
+  "/fundContract/:id",
+  protect,
+  authorizeRoles("client"),
+  enforceContractState("Assigned"),
+  contractController.fundContract,
+);
+router.post(
+  "/approveWork/:id",
+  protect,
+  authorizeRoles("client"),
+  enforceContractState("Submitted"),
+  contractController.approveWork,
+);
+router.get(
+  "/marketpalce",
+  protect,
+  authorizeRoles("freelancer"),
+  contractController.getMarketplaceContracts,
+);
+router.get(
+  "/user/:userId/stats",
+  protect,
+  contractController.getUserContractStats,
+);
 
 module.exports = router;

@@ -100,3 +100,55 @@ exports.applyToContract = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+exports.getFreelancerList = async (req, res) => {
+  try {
+    const User = require("../Model/User");
+    const freelancers = await User.find({
+      role: "freelancer",
+      isActive: true,
+    }).select("-password");
+
+    // Enrich with stats from contracts
+    const enrichedFreelancers = await Promise.all(
+      freelancers.map(async (freelancer) => {
+        const contracts = await contract.find({
+          freelancer: freelancer._id,
+          status: {
+            $in: [
+              "Assigned",
+              "Funded",
+              "Submitted",
+              "Approved",
+              "Paid",
+              "Disputed",
+              "Resolved",
+            ],
+          },
+        });
+
+        const completedContracts = contracts.filter(
+          (c) => c.status === "Paid",
+        ).length;
+        const totalEarnings = contracts
+          .filter((c) => c.status === "Paid")
+          .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+        const disputes = contracts.filter(
+          (c) => c.status === "Disputed",
+        ).length;
+
+        return {
+          ...freelancer.toObject(),
+          completedContracts,
+          totalEarnings,
+          disputes,
+        };
+      }),
+    );
+
+    res.status(200).json(enrichedFreelancers);
+  } catch (error) {
+    console.error("[FreelancerController] GetFreelancerList error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

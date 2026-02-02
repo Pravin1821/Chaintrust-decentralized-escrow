@@ -5,12 +5,16 @@ const {
   submitWork,
   getConntractById,
   applyToContract,
+  getFreelancerList,
 } = require("../Controller/FreelancerController");
 const { protect } = require("../Middleware/AuthMiddleware");
 const { authorizeRoles } = require("../Middleware/RoleMiddleware");
 const {
   enforceContractState,
 } = require("../Middleware/ContractStateMiddleware");
+
+router.get("/list", protect, getFreelancerList);
+
 router.use(protect);
 router.use(authorizeRoles("freelancer"));
 router.get("/assignedContracts", getAssignedContracts);

@@ -102,7 +102,6 @@ exports.approveWork = async (req, res) => {
     if (existingContract.client.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    // Prevent approving disputed contracts
     if (existingContract.status === "Disputed") {
       return res
         .status(400)
@@ -136,13 +135,61 @@ exports.getMarketplaceContracts = async (req, res) => {
     })
       .populate({ path: "client", select: "username email name" })
       .sort({ createdAt: -1 });
+
+    // Add hasApplied flag for the requesting user
+    const userId = req.user?._id?.toString();
+
     res.status(200).json(
       contracts.map((c) => ({
         ...c.toObject(),
         applicationsCount: c.applications.length,
+        hasApplied: userId
+          ? c.applications.some((app) => app.freelancer.toString() === userId)
+          : false,
       })),
     );
   } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getUserContractStats = async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const contracts = await Contract.find({
+      freelancer: userId,
+      status: {
+        $in: [
+          "Assigned",
+          "Funded",
+          "Submitted",
+          "Approved",
+          "Paid",
+          "Disputed",
+          "Resolved",
+        ],
+      },
+    })
+      .populate({ path: "client", select: "username email name" })
+      .sort({ createdAt: -1 })
+      .limit(10);
+
+    const completedContracts = contracts.filter(
+      (c) => c.status === "Paid",
+    ).length;
+    const totalEarnings = contracts
+      .filter((c) => c.status === "Paid")
+      .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+    const disputes = contracts.filter((c) => c.status === "Disputed").length;
+
+    res.status(200).json({
+      completedContracts,
+      totalEarnings,
+      disputes,
+      recentContracts: contracts.slice(0, 5),
+    });
+  } catch (error) {
+    console.error("[ContractController] GetUserContractStats error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };

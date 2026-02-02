@@ -44,6 +44,10 @@ export default function Sidebar() {
           <span>🛠️</span>
           <span>Create Contract</span>
         </NavLink>
+        <NavLink to="/client/marketplace" className={linkClass}>
+          <span>🎯</span>
+          <span>Find Freelancers</span>
+        </NavLink>
         <NavLink to="/client/wallet" className={linkClass}>
           <span>👛</span>
           <span>Wallet & Escrow</span>

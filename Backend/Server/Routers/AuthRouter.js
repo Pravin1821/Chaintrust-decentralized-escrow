@@ -9,4 +9,5 @@ router.post("/login", authController.login);
 router.get("/me", protect, authController.me);
 router.patch("/update", protect, authController.update);
 router.get("/profile", protect, authController.getProfile);
+router.get("/user/:id", protect, authController.getUserById);
 module.exports = router;

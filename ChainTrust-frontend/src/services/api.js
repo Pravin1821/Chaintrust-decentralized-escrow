@@ -39,3 +39,9 @@ export async function updateProfile(payload) {
   const { data } = await api.patch("/auth/update", payload);
   return data;
 }
+
+export const profileService = {
+  getUserProfile: (userId) => api.get(`/auth/user/${userId}`),
+  getFreelancerList: () => api.get("/freelancer/list"),
+  getUserStats: (userId) => api.get(`/contracts/user/${userId}/stats`),
+};

@@ -107,9 +107,21 @@ export default function Topbar() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
-          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gray-800 border border-gray-700/60 flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0">
+          <button
+            onClick={() => {
+              const profilePath =
+                user?.role === "freelancer"
+                  ? "/freelancer/profile"
+                  : user?.role === "client"
+                    ? "/client/profile"
+                    : "/profile";
+              navigate(profilePath);
+            }}
+            className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-400/50 flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0 hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-cyan-500/50 cursor-pointer"
+            title="Go to Profile"
+          >
             {initials}
-          </div>
+          </button>
           <button
             onClick={logout}
             className="px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs rounded-lg bg-red-600/80 hover:bg-red-500 text-white whitespace-nowrap flex-shrink-0"
