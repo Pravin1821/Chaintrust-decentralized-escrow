@@ -34,15 +34,15 @@ export default function Wallet() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Wallet & Escrow</h1>
-        <p className="text-sm text-gray-400">
+        <h1 className="text-xl md:text-2xl font-bold">Wallet & Escrow</h1>
+        <p className="text-xs md:text-sm text-gray-400">
           Connect MetaMask and view balances. UI-only.
         </p>
       </header>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         <Card title="Network" value={network} icon="🌐" />
         <Card
           title="Address"
@@ -56,16 +56,16 @@ export default function Wallet() {
         />
       </section>
 
-      <div className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl flex items-center justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">Escrow Summary</h2>
-          <p className="text-sm text-gray-400">
+      <div className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-base md:text-lg font-semibold">Escrow Summary</h2>
+          <p className="text-xs md:text-sm text-gray-400">
             Locked: 42.5 ETH • Pending actions: 2
           </p>
         </div>
         <button
           onClick={handleConnect}
-          className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500"
+          className="w-full sm:w-auto px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-500 whitespace-nowrap"
         >
           {address ? "Reconnect" : "Connect Wallet"}
         </button>
@@ -76,13 +76,13 @@ export default function Wallet() {
 
 function Card({ title, value, icon }) {
   return (
-    <div className="p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
+    <div className="p-3 md:p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-xs text-gray-400">{title}</p>
-          <p className="text-lg font-semibold">{value}</p>
+          <p className="text-base md:text-lg font-semibold truncate">{value}</p>
         </div>
-        <span className="text-2xl">{icon}</span>
+        <span className="text-xl md:text-2xl ml-2 flex-shrink-0">{icon}</span>
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export default function Disputes() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold mb-4">Disputes</h1>
+      <h1 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">Disputes</h1>
       {loading && <Loader label="Loading disputes..." />}
       {error && (
         <div className="bg-red-900/20 border border-red-500/30 text-red-200 p-3 rounded-lg">
@@ -69,28 +69,28 @@ export default function Disputes() {
               return (
                 <div
                   key={d._id}
-                  className="bg-gray-900/70 border border-cyan-400/10 rounded-xl p-4"
+                  className="bg-gray-900/70 border border-cyan-400/10 rounded-xl p-3 md:p-4"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="font-semibold truncate mr-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                    <div className="font-semibold truncate text-sm md:text-base">
                       {d.reason}
                     </div>
                     <StatusBadge status={d.status || "Disputed"} />
                   </div>
-                  <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                    <div className="text-gray-300">
+                  <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-xs md:text-sm">
+                    <div className="text-gray-300 truncate">
                       <span className="text-gray-400">Contract:</span>{" "}
                       {contractLabel || "—"}
                     </div>
-                    <div className="text-gray-300">
+                    <div className="text-gray-300 truncate">
                       <span className="text-gray-400">Raised By:</span>{" "}
                       {d.raisedBy || "—"}
                     </div>
-                    <div className="text-gray-300">
+                    <div className="text-gray-300 truncate">
                       <span className="text-gray-400">Created:</span> {created}
                     </div>
                   </div>
-                  <div className="mt-2 text-sm text-gray-300">
+                  <div className="mt-2 text-xs md:text-sm text-gray-300">
                     <span className="text-gray-400">Evidence:</span>{" "}
                     {evidence.length ? evidence.join(", ") : "—"}
                   </div>

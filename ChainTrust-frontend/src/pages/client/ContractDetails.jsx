@@ -29,21 +29,25 @@ export default function ContractDetails() {
   if (loading) return <Loader label="Loading contract..." />;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       {error && (
         <div className="p-3 rounded-lg bg-yellow-600/20 text-yellow-200 border border-yellow-600/30 text-sm">
           ⚠️ {error}
         </div>
       )}
-      <header className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">{item.title}</h1>
-          <p className="text-sm text-gray-400">{item.description}</p>
+      <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl md:text-2xl font-bold truncate">
+            {item.title}
+          </h1>
+          <p className="text-xs md:text-sm text-gray-400 line-clamp-2">
+            {item.description}
+          </p>
         </div>
         <StatusBadge status={item.status} />
       </header>
 
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
         <InfoCard
           title="Amount"
           value={formatAmount(item.amount, item.paymentType, item.currency)}
@@ -57,8 +61,8 @@ export default function ContractDetails() {
         />
       </section>
 
-      <section className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
-        <h2 className="text-lg font-semibold mb-2">Timeline</h2>
+      <section className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
+        <h2 className="text-base md:text-lg font-semibold mb-2">Timeline</h2>
         <div className="flex flex-wrap items-center gap-2">
           {item.timeline?.map((t, idx) => (
             <div key={idx} className="flex items-center">
@@ -71,17 +75,17 @@ export default function ContractDetails() {
         </div>
       </section>
 
-      <section className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl grid grid-cols-1 md:grid-cols-2 gap-4">
+      <section className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4">
         <div>
-          <h2 className="text-lg font-semibold mb-2">
+          <h2 className="text-base md:text-lg font-semibold mb-2">
             Blockchain (placeholders)
           </h2>
-          <div className="space-y-2 text-sm text-gray-300">
-            <p>
+          <div className="space-y-2 text-xs md:text-sm text-gray-300">
+            <p className="truncate">
               Escrow Address:{" "}
               <span className="text-cyan-300">{item.escrowAddress}</span>
             </p>
-            <p>
+            <p className="truncate">
               Tx Hash: <span className="text-cyan-300">{item.txHash}</span>
             </p>
             <p>
@@ -90,8 +94,10 @@ export default function ContractDetails() {
           </div>
         </div>
         <div>
-          <h2 className="text-lg font-semibold mb-2">Submission</h2>
-          <p className="text-sm text-gray-300">
+          <h2 className="text-base md:text-lg font-semibold mb-2">
+            Submission
+          </h2>
+          <p className="text-xs md:text-sm text-gray-300 truncate">
             IPFS:{" "}
             <a
               className="text-blue-300 hover:underline"
@@ -102,19 +108,19 @@ export default function ContractDetails() {
               {item.ipfsHash}
             </a>
           </p>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3 flex flex-col sm:flex-row flex-wrap gap-2">
             {item.status === "Assigned" && item.escrowStatus !== "Funded" && (
-              <button className="px-3 py-1.5 text-xs rounded-lg bg-cyan-600/80 hover:bg-cyan-500">
+              <button className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-lg bg-cyan-600/80 hover:bg-cyan-500">
                 Fund Escrow
               </button>
             )}
             {item.status === "Submitted" && (
-              <button className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600/80 hover:bg-emerald-500">
+              <button className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-lg bg-emerald-600/80 hover:bg-emerald-500">
                 Approve
               </button>
             )}
             {item.status === "Submitted" && (
-              <button className="px-3 py-1.5 text-xs rounded-lg bg-red-600/80 hover:bg-red-500">
+              <button className="w-full sm:w-auto px-3 py-1.5 text-xs rounded-lg bg-red-600/80 hover:bg-red-500">
                 Reject
               </button>
             )}
@@ -130,13 +136,13 @@ export default function ContractDetails() {
 
 function InfoCard({ title, value, icon }) {
   return (
-    <div className="p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
+    <div className="p-3 md:p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="text-xs text-gray-400">{title}</p>
-          <p className="text-lg font-semibold">{value}</p>
+          <p className="text-base md:text-lg font-semibold truncate">{value}</p>
         </div>
-        <span className="text-2xl">{icon}</span>
+        <span className="text-xl md:text-2xl ml-2 flex-shrink-0">{icon}</span>
       </div>
     </div>
   );

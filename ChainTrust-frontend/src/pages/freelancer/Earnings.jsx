@@ -109,13 +109,13 @@ export default function Earnings() {
 
 function Card({ title, value, icon }) {
   return (
-    <div className="p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
+    <div className="p-3 md:p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-xs text-gray-400">{title}</p>
-          <p className="text-lg font-semibold">{value}</p>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-gray-400 truncate">{title}</p>
+          <p className="text-base md:text-lg font-semibold truncate">{value}</p>
         </div>
-        <span className="text-2xl">{icon}</span>
+        <span className="text-xl md:text-2xl ml-2 flex-shrink-0">{icon}</span>
       </div>
     </div>
   );

@@ -9,6 +9,6 @@ router.get('/getContracts', protect, authorizeRoles('client'), contractControlle
 router.post('/assignFreelancer/:id', protect, authorizeRoles('client'), contractController.assignFreelancer);
 router.post('/fundContract/:id', protect, authorizeRoles('client'),   enforceContractState("Assigned"),contractController.fundContract);
 router.post('/approveWork/:id', protect, authorizeRoles('client'), enforceContractState("Submitted"), contractController.approveWork);
-
+router.get('/marketpalce',protect, authorizeRoles('freelancer'), contractController.getMarketplaceContracts);
 
 module.exports = router;

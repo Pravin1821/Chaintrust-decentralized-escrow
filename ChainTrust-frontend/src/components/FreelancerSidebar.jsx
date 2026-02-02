@@ -21,7 +21,7 @@ export default function FreelancerSidebar() {
     <div className="p-4">
       <button
         type="button"
-        onClick={() => navigate("/profile")}
+        onClick={() => navigate("/freelancer/profile")}
         className="w-full text-left px-4 py-3 mb-3 bg-gray-800/60 rounded-xl border border-gray-700/50 hover:border-cyan-500/40 hover:bg-gray-800/80 transition-colors"
         aria-label="Go to Profile"
       >
@@ -36,6 +36,10 @@ export default function FreelancerSidebar() {
           <span>📊</span>
           <span>Dashboard</span>
         </NavLink>
+        <NavLink to="/freelancer/marketplace" className={linkClass}>
+          <span>🛒</span>
+          <span>Marketplace</span>
+        </NavLink>
         <NavLink to="/freelancer/contracts" className={linkClass}>
           <span>📄</span>
           <span>My Contracts</span>
@@ -44,7 +48,7 @@ export default function FreelancerSidebar() {
           <span>💸</span>
           <span>Earnings</span>
         </NavLink>
-        <NavLink to="/profile" className={linkClass}>
+        <NavLink to="/freelancer/profile" className={linkClass}>
           <span>👤</span>
           <span>Profile</span>
         </NavLink>

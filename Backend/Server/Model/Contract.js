@@ -40,7 +40,7 @@ const contractSchema = new mongoose.Schema({
     },
     status:{
         type: String,
-        enum: ["Created", "Assigned", "Funded", "Submitted", "Approved", "Paid", "Disputed", "Resolved"],
+        enum: ["Created","Applied", "Assigned", "Funded", "Submitted", "Approved", "Paid", "Disputed", "Resolved"],
         default: "Created"
     },
     blockchainContrctId:{

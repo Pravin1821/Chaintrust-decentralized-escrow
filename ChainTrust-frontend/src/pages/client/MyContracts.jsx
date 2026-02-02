@@ -80,14 +80,14 @@ export default function MyContracts() {
   if (loading) return <Loader label="Loading contracts..." />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {error && (
         <div className="p-3 rounded-lg bg-yellow-600/20 text-yellow-200 border border-yellow-600/30 text-sm">
           ⚠️ {error}
         </div>
       )}
-      <h1 className="text-2xl font-bold">My Contracts</h1>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <h1 className="text-xl md:text-2xl font-bold">My Contracts</h1>
+      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
         {items.map((item) => (
           <ContractCard
             key={item.id || item._id}

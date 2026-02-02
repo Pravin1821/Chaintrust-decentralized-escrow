@@ -22,6 +22,7 @@ export const clientContractService = {
 export const freelancerService = {
   // Backend route is /freelancer/assignedContracts
   myContracts: () => api.get("/freelancer/assignedContracts"),
+  getMarketplace: () => api.get("/contracts/marketpalce"), // Note: backend has typo "marketpalce"
   apply: (id, payload) => api.post(`/freelancer/apply/${id}`, payload),
   submitWork: (id, payload) => api.post(`/freelancer/submitWork`, payload),
 };

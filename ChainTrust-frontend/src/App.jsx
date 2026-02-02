@@ -9,11 +9,13 @@ import ContractDetails from "./pages/client/ContractDetails.jsx";
 import Wallet from "./pages/client/Wallet.jsx";
 import Disputes from "./pages/client/Disputes.jsx";
 import Profile from "./pages/client/Profile.jsx";
+import FreelancerProfile from "./pages/freelancer/Profile.jsx";
 import FreelancerDashboard from "./pages/freelancer/Dashboard.jsx";
 import FreelancerLayout from "./layouts/FreelancerLayout.jsx";
 import FreelancerMyContracts from "./pages/freelancer/MyContracts.jsx";
 import FreelancerContractDetails from "./pages/freelancer/ContractDetails.jsx";
 import FreelancerEarnings from "./pages/freelancer/Earnings.jsx";
+import FreelancerMarketplace from "./pages/freelancer/Marketplace.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 
 function App() {
@@ -38,10 +40,13 @@ function App() {
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["freelancer"]} />}>
         <Route element={<FreelancerLayout />}>
-          <Route path="/profile" element={<Profile />} />
           <Route
             path="/freelancer/dashboard"
             element={<FreelancerDashboard />}
+          />
+          <Route
+            path="/freelancer/marketplace"
+            element={<FreelancerMarketplace />}
           />
           <Route
             path="/freelancer/contracts"
@@ -52,6 +57,7 @@ function App() {
             element={<FreelancerContractDetails />}
           />
           <Route path="/freelancer/earnings" element={<FreelancerEarnings />} />
+          <Route path="/freelancer/profile" element={<FreelancerProfile />} />
         </Route>
       </Route>
       <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>

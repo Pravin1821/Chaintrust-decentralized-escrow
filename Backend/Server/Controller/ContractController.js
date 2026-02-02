@@ -72,6 +72,14 @@ exports.fundContract = async (req, res) => {
     if (contract.client.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
+    if (contract.escrowStatus === "Funded") {
+      return res.status(400).json({ message: "Contract already funded" });
+    }
+    if (contract.status === "Disputed") {
+      return res
+        .status(400)
+        .json({ message: "Cannot fund a disputed contract" });
+    }
     contract.status = "Funded";
     contract.escrowStatus = "Funded";
     contract.fundedAt = Date.now();
@@ -94,6 +102,12 @@ exports.approveWork = async (req, res) => {
     if (existingContract.client.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
+    // Prevent approving disputed contracts
+    if (existingContract.status === "Disputed") {
+      return res
+        .status(400)
+        .json({ message: "Cannot approve a disputed contract" });
+    }
     if (existingContract.status !== "Submitted") {
       return res
         .status(400)
@@ -109,6 +123,25 @@ exports.approveWork = async (req, res) => {
     res
       .status(200)
       .json({ message: "Work approved successfully", existingContract });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+exports.getMarketplaceContracts = async (req, res) => {
+  try {
+    const contracts = await Contract.find({
+      status: "Created",
+      freelancer: null,
+      deadline: { $gt: new Date() },
+    })
+      .populate({ path: "client", select: "username email name" })
+      .sort({ createdAt: -1 });
+    res.status(200).json(
+      contracts.map((c) => ({
+        ...c.toObject(),
+        applicationsCount: c.applications.length,
+      })),
+    );
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }

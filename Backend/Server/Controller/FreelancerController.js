@@ -34,6 +34,11 @@ exports.submitWork = async (req, res) => {
     if (existingContract.freelancer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
+    if (existingContract.status === "Disputed") {
+      return res
+        .status(400)
+        .json({ message: "Cannot submit work on a disputed contract" });
+    }
     if (existingContract.status !== "Funded") {
       return res
         .status(400)

@@ -35,11 +35,10 @@ exports.register = async (req, res) => {
       newUser.walletAddress = walletAddress || null;
     }
     await newUser.save();
-    const jwtSecret = process.env.JWT_SECRET || "dev-secret-change-me";
     const token = jwt.sign(
       { userId: newUser._id, role: newUser.role },
-      jwtSecret,
-      { expiresIn: "1d" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
     );
     res.status(201).json({
       _id: newUser._id,
@@ -69,11 +68,10 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
-    const jwtSecret = process.env.JWT_SECRET || "dev-secret-change-me";
     const token = jwt.sign(
       { userId: existingUser._id, role: existingUser.role },
-      jwtSecret,
-      { expiresIn: "1d" },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" },
     );
     res.status(200).json({
       _id: existingUser._id,

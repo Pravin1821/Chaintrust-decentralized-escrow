@@ -64,29 +64,39 @@ export default function ContractCard({
     : null;
   const freelancerEmail = freelancerAssigned ? freelancer.email : null;
   return (
-    <div className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl backdrop-blur-sm">
-      <div className="flex items-start justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-white">{contract.title}</h3>
-          <p className="text-xs text-gray-400 mt-1">{contract.description}</p>
-          <div className="mt-2 flex items-center space-x-2">
+    <div className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl backdrop-blur-sm">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base md:text-lg font-semibold text-white truncate">
+            {contract.title}
+          </h3>
+          <p className="text-xs text-gray-400 mt-1 line-clamp-2">
+            {contract.description}
+          </p>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <StatusBadge status={contract.status} />
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 whitespace-nowrap">
               Amount: {amountDisplay}
             </span>
-            <span className="text-xs text-gray-400">
+            <span className="text-xs text-gray-400 whitespace-nowrap">
               Deadline: {contract.deadline}
             </span>
-            <span className="text-xs text-gray-400">Next: {nextState}</span>
+            <span className="text-xs text-gray-400 whitespace-nowrap">
+              Next: {nextState}
+            </span>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-left sm:text-right flex-shrink-0">
           <p className="text-xs text-gray-400">Freelancer</p>
           {freelancerAssigned ? (
             <div>
-              <p className="text-sm text-gray-200">{freelancerName}</p>
+              <p className="text-sm text-gray-200 truncate max-w-[200px]">
+                {freelancerName}
+              </p>
               {freelancerEmail && (
-                <p className="text-xs text-gray-400">{freelancerEmail}</p>
+                <p className="text-xs text-gray-400 truncate max-w-[200px]">
+                  {freelancerEmail}
+                </p>
               )}
             </div>
           ) : (
@@ -94,7 +104,7 @@ export default function ContractCard({
           )}
         </div>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="mt-3 md:mt-4 flex flex-wrap gap-2">
         {hasAssignPermission && (
           <button
             className="px-3 py-1.5 text-xs rounded-lg bg-blue-600/80 hover:bg-blue-500"

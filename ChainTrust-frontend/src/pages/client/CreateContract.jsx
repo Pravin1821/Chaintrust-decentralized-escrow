@@ -32,10 +32,10 @@ export default function CreateContract() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <header>
-        <h1 className="text-2xl font-bold">Create Contract</h1>
-        <p className="text-sm text-gray-400">
+        <h1 className="text-xl md:text-2xl font-bold">Create Contract</h1>
+        <p className="text-xs md:text-sm text-gray-400">
           Step-based layout with Web3 styling
         </p>
       </header>
@@ -46,9 +46,12 @@ export default function CreateContract() {
         </div>
       )}
 
-      <form onSubmit={submit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
-          <h2 className="text-lg font-semibold mb-3">1. Basics</h2>
+      <form
+        onSubmit={submit}
+        className="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-4"
+      >
+        <div className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
+          <h2 className="text-base md:text-lg font-semibold mb-3">1. Basics</h2>
           <div className="space-y-3">
             <Input
               label="Title"
@@ -63,8 +66,8 @@ export default function CreateContract() {
           </div>
         </div>
 
-        <div className="p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
-          <h2 className="text-lg font-semibold mb-3">2. Escrow</h2>
+        <div className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
+          <h2 className="text-base md:text-lg font-semibold mb-3">2. Escrow</h2>
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Amount"
@@ -78,17 +81,21 @@ export default function CreateContract() {
               onChange={(v) => setForm({ ...form, currency: v })}
               options={["ETH", "USDT"]}
             />
-            <Input
-              label="Deadline"
-              value={form.deadline}
-              onChange={(v) => setForm({ ...form, deadline: v })}
-              type="date"
-            />
+            <div className="col-span-2">
+              <Input
+                label="Deadline"
+                value={form.deadline}
+                onChange={(v) => setForm({ ...form, deadline: v })}
+                type="date"
+              />
+            </div>
           </div>
         </div>
 
-        <div className="md:col-span-2 p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
-          <h2 className="text-lg font-semibold mb-3">3. Conditions</h2>
+        <div className="lg:col-span-2 p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
+          <h2 className="text-base md:text-lg font-semibold mb-3">
+            3. Conditions
+          </h2>
           <TextArea
             label="Delivery conditions"
             value={form.conditions}
@@ -96,11 +103,11 @@ export default function CreateContract() {
           />
         </div>
 
-        <div className="md:col-span-2 flex justify-end">
+        <div className="lg:col-span-2 flex justify-end">
           <button
             disabled={submitting}
             type="submit"
-            className="px-5 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50 font-medium"
           >
             {submitting ? "Submitting..." : "Submit Contract"}
           </button>

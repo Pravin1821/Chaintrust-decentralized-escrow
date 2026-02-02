@@ -30,13 +30,16 @@ exports.raiseDispute = async (req, res) => {
         .status(403)
         .json({ message: "Unauthorized to raise dispute on this contract" });
     }
-    if (!["Funded", "Submitted"].includes(contract.status)) {
+    if (contract.status === "Paid") {
       return res
         .status(400)
-        .json({
-          message:
-            "Dispute can only be raised on Funded or Submitted contracts",
-        });
+        .json({ message: "Cannot dispute after payment has been completed" });
+    }
+    if (!["", "Submitted", "Approved"].includes(contract.status)) {
+      return res.status(400).json({
+        message:
+          "Dispute can only be raised on Funded, Submitted, or Approved contracts",
+      });
     }
     const dispute = await Dispute.create({
       contract: contract._id,
@@ -57,7 +60,7 @@ exports.raiseDispute = async (req, res) => {
 
 exports.resolveDispute = async (req, res) => {
   try {
-    const [disputeId, decision] = req.body;
+    const { disputeId, decision } = req.body;
     if (!["clientWins", "freelancerWins"].includes(decision)) {
       return res.status(400).json({ message: "Invalid decision value" });
     }

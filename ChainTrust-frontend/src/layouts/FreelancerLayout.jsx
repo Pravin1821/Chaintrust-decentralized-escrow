@@ -9,9 +9,9 @@ export default function FreelancerLayout() {
         <aside className="hidden md:block w-64 border-r border-gray-800/50 bg-gray-900/40 backdrop-blur-xl">
           <FreelancerSidebar />
         </aside>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <Topbar />
-          <main className="p-4 md:p-6">
+          <main className="p-3 sm:p-4 md:p-6">
             <Outlet />
           </main>
         </div>
