@@ -1,4 +1,12 @@
 import { useState } from "react";
+import {
+  LuStar,
+  LuEye,
+  LuMail,
+  LuCalendar,
+  LuCircleCheck,
+  LuBadgeCheck,
+} from "react-icons/lu";
 
 export default function FreelancerCard({
   freelancer,
@@ -25,7 +33,7 @@ export default function FreelancerCard({
       <div className="p-4 space-y-4">
         {/* Header with Avatar and Name */}
         <div className="flex items-start gap-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-2xl font-bold text-white shrink-0">
+          <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center text-2xl font-bold text-white shrink-0">
             {freelancer.username?.[0]?.toUpperCase() || "?"}
           </div>
           <div className="flex-1 min-w-0">
@@ -36,12 +44,13 @@ export default function FreelancerCard({
               {freelancer.username}
             </button>
             <div className="flex items-center gap-2 mt-1">
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                🎯 FREELANCER
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                <LuBadgeCheck size={12} />
+                FREELANCER
               </span>
             </div>
             <div className="flex items-center gap-1 mt-2 text-sm">
-              <span className="text-yellow-400">⭐</span>
+              <LuStar size={14} className="text-amber-400 fill-amber-400" />
               <span className="text-gray-300 font-semibold">
                 {stats.rating.toFixed(1)}
               </span>
@@ -112,25 +121,31 @@ export default function FreelancerCard({
         <div className="flex gap-2 pt-2 border-t border-gray-700/50">
           <button
             onClick={() => onViewProfile(freelancer)}
-            className="flex-1 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition-colors text-sm font-medium"
+            className="flex-1 px-3 py-2 bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition-all duration-300 text-sm font-medium flex items-center justify-center gap-1.5"
           >
-            👁️ View Profile
+            <LuEye size={16} />
+            View Profile
           </button>
           <button
             onClick={() => onInvite(freelancer)}
-            className="flex-1 px-3 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-purple-500/50"
+            className="flex-1 px-3 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all duration-300 text-sm shadow-lg hover:shadow-cyan-500/50 flex items-center justify-center gap-1.5"
           >
-            📧 Invite
+            <LuMail size={16} />
+            Invite
           </button>
         </div>
 
         {/* Additional Info */}
         <div className="flex items-center gap-3 text-xs text-gray-400 pt-2 border-t border-gray-700/30">
-          <span>
-            📅 Joined {new Date(freelancer.createdAt).toLocaleDateString()}
+          <span className="flex items-center gap-1">
+            <LuCalendar size={12} />
+            Joined {new Date(freelancer.createdAt).toLocaleDateString()}
           </span>
           {freelancer.isWalletVerified && (
-            <span className="text-green-400">✓ Verified</span>
+            <span className="text-green-400 flex items-center gap-1">
+              <LuCircleCheck size={12} />
+              Verified
+            </span>
           )}
         </div>
       </div>

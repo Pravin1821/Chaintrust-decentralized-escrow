@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
             _id: data._id,
             username: data.username,
             email: data.email,
-            role: data.role,
+            role: normalizeRole(data.role),
             walletAddress: data.walletAddress,
             isWalletVerified: data.isWalletVerified,
             isActive: data.isActive,
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }) => {
       _id: data._id,
       username: data.username,
       email: data.email,
-      role: data.role,
+      role: normalizeRole(data.role),
       walletAddress: data.walletAddress,
       isWalletVerified: data.isWalletVerified,
       isActive: data.isActive,
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }) => {
       _id: data._id,
       username: data.username,
       email: data.email,
-      role: data.role,
+      role: normalizeRole(data.role),
       walletAddress: data.walletAddress,
       isWalletVerified: data.isWalletVerified,
       isActive: data.isActive,
@@ -139,4 +139,13 @@ function normalizeAuthPath(path, fallback) {
     return `/auth${p}`;
   }
   return p;
+}
+
+// Normalize role casing to a consistent title-case used by route guards
+function normalizeRole(role) {
+  if (!role) return "Client";
+  const r = String(role).toLowerCase();
+  if (r === "freelancer") return "Freelancer";
+  if (r === "admin") return "Admin";
+  return "Client";
 }

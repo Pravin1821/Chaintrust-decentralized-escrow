@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // Determine backend API base. Expect it to be something like http://host:port/api
-const rawBase = import.meta.env.VITE_API_BASE || "http://localhost:5000/api";
+const rawBase = import.meta.env.VITE_API_BASE || "http://localhost:8000/api";
 
 // Normalize common misconfigurations like including a resource segment (e.g. /api/auth)
 // This ensures service calls like "/auth/me" become "<base>/auth/me" rather than duplicating segments.

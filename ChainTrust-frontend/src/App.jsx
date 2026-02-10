@@ -1,4 +1,5 @@
 import { Route, Routes, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Auth from "./pages/auth/Auth.jsx";
 import ProtectedRoute from "./routes/ProtectedRoute.jsx";
 import ClientLayout from "./layouts/ClientLayout.jsx";
@@ -17,17 +18,41 @@ import FreelancerMyContracts from "./pages/freelancer/MyContracts.jsx";
 import FreelancerContractDetails from "./pages/freelancer/ContractDetails.jsx";
 import FreelancerEarnings from "./pages/freelancer/Earnings.jsx";
 import FreelancerMarketplace from "./pages/freelancer/Marketplace.jsx";
-import AdminDashboard from "./pages/AdminDashboard.jsx";
+import AdminLayout from "./layouts/AdminLayout.jsx";
+import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
+import AdminDisputes from "./pages/admin/AdminDisputes.jsx";
+import AdminContracts from "./pages/admin/AdminContracts.jsx";
+import AdminUsers from "./pages/admin/AdminUsers.jsx";
+import AdminMarketplace from "./pages/admin/AdminMarketplace.jsx";
+
+function RootRedirect() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Redirect to appropriate dashboard based on role
+  const dashboardPath = `/${user.role.toLowerCase()}/dashboard`;
+  return <Navigate to={dashboardPath} replace />;
+}
 
 function App() {
   return (
     <Routes>
+      {/* Root redirect */}
+      <Route path="/" element={<RootRedirect />} />
+
       {/* Public */}
       <Route path="/login" element={<Auth />} />
       <Route path="/register" element={<Auth />} />
 
       {/* Protected role-based routes */}
-      <Route element={<ProtectedRoute allowedRoles={["client"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["Client"]} />}>
         <Route element={<ClientLayout />}>
           <Route path="/profile" element={<Profile />} />
           <Route path="/client/dashboard" element={<Dashboard />} />
@@ -40,7 +65,7 @@ function App() {
           <Route path="/client/marketplace" element={<ClientMarketplace />} />
         </Route>
       </Route>
-      <Route element={<ProtectedRoute allowedRoles={["freelancer"]} />}>
+      <Route element={<ProtectedRoute allowedRoles={["Freelancer"]} />}>
         <Route element={<FreelancerLayout />}>
           <Route
             path="/freelancer/dashboard"
@@ -62,8 +87,14 @@ function App() {
           <Route path="/freelancer/profile" element={<FreelancerProfile />} />
         </Route>
       </Route>
-      <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/disputes" element={<AdminDisputes />} />
+          <Route path="/admin/contracts" element={<AdminContracts />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/marketplace" element={<AdminMarketplace />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<Navigate to="/login" />} />

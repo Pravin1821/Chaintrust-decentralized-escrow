@@ -96,10 +96,25 @@ exports.resolveDispute = async (req, res) => {
 exports.getAllDisputes = async (req, res) => {
   try {
     const disputes = await Dispute.find()
-      .populate("contract")
-      .populate("raisedByUser", "name email")
-      .populate("resolvedBy", "name email");
-    res.status(200).json({ disputes });
+      .populate({
+        path: "contract",
+        populate: [
+          { path: "client", select: "username email" },
+          { path: "freelancer", select: "username email" },
+        ],
+      })
+      .populate("raisedByUser", "username email")
+      .populate("resolvedBy", "username email")
+      .sort({ createdAt: -1 });
+
+    // Transform to match frontend expectations (contract -> contractId)
+    const transformedDisputes = disputes.map((dispute) => ({
+      ...dispute.toObject(),
+      contractId: dispute.contract,
+      status: dispute.status === "Open" ? "Disputed" : "Resolved",
+    }));
+
+    res.status(200).json(transformedDisputes);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });

@@ -28,7 +28,7 @@ app.use(
   }),
 );
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-app.use(express.json())
+app.use(express.json());
 const PORT = process.env.PORT || 5000;
 mongoose
   .connect(process.env.MONGO_URI)
@@ -39,6 +39,8 @@ mongoose
   });
 const allowedOrigins = [
   "http://localhost:5173",
+  "http://localhost:5174",
+  "http://localhost:5175",
   "http://localhost:3000",
   process.env.FRONTEND_URL,
 ].filter(Boolean);
@@ -61,7 +63,7 @@ app.use(
 );
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 150, 
+  max: 150,
   message: "Too many login attempts, please try again after 15 minutes",
   standardHeaders: true,
   legacyHeaders: false,
@@ -78,11 +80,13 @@ const authRouter = require("./Routers/AuthRouter");
 const contractRouter = require("./Routers/ContractRouter");
 const freelancerRouter = require("./Routers/freelancerRouter");
 const disputeRouter = require("./Routers/DisputeRoutes");
+const adminRouter = require("./Routers/AdminRouter");
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api", apiLimiter);
 app.use("/api/contracts", contractRouter);
 app.use("/api/freelancer", freelancerRouter);
 app.use("/api/disputes", disputeRouter);
+app.use("/api/users", adminRouter);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

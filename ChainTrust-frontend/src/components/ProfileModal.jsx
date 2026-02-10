@@ -28,7 +28,7 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
       setProfile(userData);
 
       // Fetch user's contract stats (only for freelancers)
-      if (userData.role === "freelancer") {
+      if (userData.role === "Freelancer") {
         try {
           const { data: contractData } = await api.get(
             `/contracts/user/${userId}/stats`,
@@ -120,12 +120,12 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                   <div className="flex items-center gap-2 mt-1">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        profile.role === "freelancer"
+                        profile.role === "Freelancer"
                           ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                           : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                       }`}
                     >
-                      {profile.role === "freelancer" ? "🎯" : "👤"}{" "}
+                      {profile.role === "Freelancer" ? "🎯" : "👤"}{" "}
                       {profile.role?.toUpperCase()}
                     </span>
                   </div>
@@ -136,7 +136,7 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
               </div>
 
               {/* Reputation Summary */}
-              {profile.role === "freelancer" && (
+              {profile.role === "Freelancer" && (
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/30">
                     <div className="text-2xl font-bold text-green-400">
@@ -166,7 +166,7 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
               )}
 
               {/* Contract History */}
-              {profile.role === "freelancer" && contracts.length > 0 && (
+              {profile.role === "Freelancer" && contracts.length > 0 && (
                 <div>
                   <h4 className="text-lg font-semibold text-white mb-3">
                     📜 Recent Contracts
@@ -234,8 +234,8 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
         {/* Footer with CTA */}
         {!loading && !error && profile && (
           <div className="sticky bottom-0 bg-gray-900/95 backdrop-blur-sm border-t border-gray-700/50 px-6 py-4">
-            {currentUser?.role === "client" &&
-            profile.role === "freelancer" &&
+            {currentUser?.role === "Client" &&
+            profile.role === "Freelancer" &&
             onInvite ? (
               <button
                 onClick={() => onInvite(profile)}

@@ -19,13 +19,13 @@ export default function Register() {
     e.preventDefault();
     try {
       const user = await register(form);
-      if (user.role === "client") {
+      if (user.role === "Client") {
         navigate("/client/dashboard");
       }
-      if (user.role === "freelancer") {
+      if (user.role === "Freelancer") {
         navigate("/freelancer/dashboard");
       }
-      if (user.role === "admin") {
+      if (user.role === "Admin") {
         navigate("/admin/dashboard");
       }
     } catch (err) {

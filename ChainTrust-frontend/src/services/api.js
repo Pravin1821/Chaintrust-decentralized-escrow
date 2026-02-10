@@ -45,3 +45,32 @@ export const profileService = {
   getFreelancerList: () => api.get("/freelancer/list"),
   getUserStats: (userId) => api.get(`/contracts/user/${userId}/stats`),
 };
+
+// Admin Services
+export const adminService = {
+  // Users
+  getAllUsers: () => api.get("/users"),
+  updateUserStatus: (userId, payload) =>
+    api.patch(`/users/${userId}/status`, payload),
+
+  // Contracts
+  getAllContracts: () => api.get("/contracts?admin=true"),
+  getContractById: (id) => api.get(`/contracts/${id}`),
+
+  // Disputes
+  getAllDisputes: () => api.get("/disputes"),
+  resolveDispute: (id, payload) => api.post(`/disputes/${id}/resolve`, payload),
+
+  // Marketplace Moderation
+  getMarketplaceContracts: () => api.get("/contracts?status=Created"),
+  moderateContract: (id, payload) =>
+    api.patch(`/contracts/${id}/moderate`, payload),
+
+  // Dashboard Stats
+  getDashboardStats: () =>
+    Promise.all([
+      api.get("/users"),
+      api.get("/contracts?admin=true"),
+      api.get("/disputes"),
+    ]),
+};

@@ -37,7 +37,7 @@ export default function Profile() {
   });
   const [skills, setSkills] = useState("");
   const [skillsMessage, setSkillsMessage] = useState(null);
-  const isFreelancer = authUser?.role === "freelancer";
+  const isFreelancer = authUser?.role === "Freelancer";
 
   useEffect(() => {
     (async () => {
@@ -56,13 +56,13 @@ export default function Profile() {
           const storedSkills = localStorage.getItem(`skills_${u._id}`);
           if (storedSkills) {
             setSkills(storedSkills);
-          } else if (u.role === "freelancer") {
+          } else if (u.role === "Freelancer") {
             setSkills("React, Node.js, MongoDB, Web3");
           }
         } catch {}
 
         // Load activity stats based on role
-        if (u.role === "client") {
+        if (u.role === "Client") {
           const { data: contractsData } =
             await clientContractService.getContracts();
           const list = Array.isArray(contractsData)
@@ -83,7 +83,7 @@ export default function Profile() {
             .filter((c) => c.status === "Paid")
             .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
           setStats({ total, active, completed, totalSpent });
-        } else if (u.role === "freelancer") {
+        } else if (u.role === "Freelancer") {
           const { data } = await freelancerService.myContracts();
           const list = Array.isArray(data) ? data : data?.contracts || [];
           const total = list.length;
@@ -225,7 +225,7 @@ export default function Profile() {
                     {user.username || "—"}
                   </span>
                   <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 whitespace-nowrap">
-                    {user.role === "freelancer" ? "Freelancer" : user.role}
+                    {user.role === "Freelancer" ? "Freelancer" : user.role}
                   </span>
                   <span
                     className={`px-2 py-0.5 text-xs rounded-full border whitespace-nowrap ${user.isActive ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-red-500/20 text-red-300 border-red-500/30"}`}
@@ -421,7 +421,7 @@ export default function Profile() {
             </form>
           </section>
 
-          {user.role === "freelancer" && (
+          {user.role === "Freelancer" && (
             <section className="p-4 bg-gray-900/70 border border-gray-800/60 rounded-xl lg:col-span-1">
               <h2 className="text-lg font-semibold mb-3">Skills & Expertise</h2>
               <div className="flex flex-wrap gap-2 mb-2">

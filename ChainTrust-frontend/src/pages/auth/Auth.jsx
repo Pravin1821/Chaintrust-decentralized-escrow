@@ -26,9 +26,9 @@ export default function Auth() {
     e.preventDefault();
     try {
       const user = await login(loginForm);
-      if (user.role === "client") navigate("/client/dashboard");
-      if (user.role === "freelancer") navigate("/freelancer/dashboard");
-      if (user.role === "admin") navigate("/admin/dashboard");
+      const role = normalizeRole(user.role);
+      const dest = roleToDashboard(role);
+      if (dest) navigate(dest);
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     }
@@ -37,10 +37,16 @@ export default function Auth() {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const user = await register(registerForm, { useAltApi: true });
-      if (user.role === "client") navigate("/client/dashboard");
-      if (user.role === "freelancer") navigate("/freelancer/dashboard");
-      if (user.role === "admin") navigate("/admin/dashboard");
+      // Ensure role casing is normalized to match backend enums (Client/Freelancer/Admin)
+      const normalizedPayload = {
+        ...registerForm,
+        role: (registerForm.role || "client").toLowerCase(),
+      };
+
+      const user = await register(normalizedPayload, { useAltApi: true });
+      const role = normalizeRole(user.role);
+      const dest = roleToDashboard(role);
+      if (dest) navigate(dest);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     }
@@ -51,6 +57,21 @@ export default function Auth() {
     setError(null);
     setShowPassword(false);
   };
+
+  const roleToDashboard = (role) => {
+    if (role === "Client") return "/client/dashboard";
+    if (role === "Freelancer") return "/freelancer/dashboard";
+    if (role === "Admin") return "/admin/dashboard";
+    return null;
+  };
+
+  function normalizeRole(role) {
+    if (!role) return "Client";
+    const r = String(role).toLowerCase();
+    if (r === "freelancer") return "Freelancer";
+    if (r === "admin") return "Admin";
+    return "Client";
+  }
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gradient-to-br from-gray-950 via-gray-900 to-black relative overflow-hidden p-4 md:p-6">

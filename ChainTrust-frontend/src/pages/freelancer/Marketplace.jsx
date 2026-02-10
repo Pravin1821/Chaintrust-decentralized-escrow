@@ -21,8 +21,8 @@ export default function Marketplace() {
   const [selectedFreelancer, setSelectedFreelancer] = useState(null);
   const navigate = useNavigate();
 
-  const isFreelancer = user?.role === "freelancer";
-  const isClient = user?.role === "client";
+  const isFreelancer = user?.role === "Freelancer";
+  const isClient = user?.role === "Client";
 
   useEffect(() => {
     fetchMarketplaceData();
