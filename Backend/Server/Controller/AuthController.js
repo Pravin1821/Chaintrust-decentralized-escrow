@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
 exports.register = async (req, res) => {
   try {
-    const {
+    let {
       username,
       email,
       password,
@@ -11,11 +11,30 @@ exports.register = async (req, res) => {
       walletAddress,
       permissions,
       department,
+      name,
     } = req.body;
-    let { name } = req.body;
+
     if (!username && name) {
       username = name;
     }
+
+    if (!email || !password || !username) {
+      return res
+        .status(400)
+        .json({ message: "Username, email, and password are required" });
+    }
+    if (password.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+    const normalizeRole = (r) => {
+      const val = String(r || "").toLowerCase();
+      if (val.includes("admin")) return "Admin";
+      if (val.includes("free")) return "Freelancer";
+      return "Client";
+    };
+    const normalizedRole = normalizeRole(role);
     const existingUser = await user.findOne({ email });
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
@@ -25,7 +44,7 @@ exports.register = async (req, res) => {
       username,
       email,
       password: hashedPassword,
-      role: role || "client",
+      role: normalizedRole,
       walletAddress,
     });
     if (role === "admin") {
@@ -54,6 +73,15 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     console.error("[AuthController] Register error:", error);
+    if (error && error.code === 11000) {
+      return res.status(400).json({ message: "User already exists" });
+    }
+    if (error?.errors) {
+      const first = Object.values(error.errors)[0];
+      return res
+        .status(400)
+        .json({ message: first?.message || "Invalid input" });
+    }
     res.status(500).json({ message: "Server error", error: error.message });
   }
 };

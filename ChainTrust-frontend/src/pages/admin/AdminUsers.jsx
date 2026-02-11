@@ -20,10 +20,19 @@ export default function AdminUsers() {
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
   const [updating, setUpdating] = useState(false);
+
+  const normalizeRole = (role) => String(role || "").toLowerCase();
+  const displayRole = (role) => {
+    const r = normalizeRole(role);
+    if (r === "admin") return "Admin";
+    if (r === "freelancer") return "Freelancer";
+    return "Client";
+  };
+  const isActiveStatus = (user) => user.isActive !== false;
 
   useEffect(() => {
     fetchUsers();
@@ -37,7 +46,12 @@ export default function AdminUsers() {
     try {
       setLoading(true);
       const response = await axios.get("/users");
-      setUsers(response.data);
+      const normalized = response.data.map((u) => ({
+        ...u,
+        roleNormalized: normalizeRole(u.role),
+        displayRole: displayRole(u.role),
+      }));
+      setUsers(normalized);
     } catch (error) {
       console.error("Failed to fetch users:", error);
     } finally {
@@ -48,15 +62,18 @@ export default function AdminUsers() {
   const filterUsers = () => {
     let filtered = users;
 
+    const roleFilterValue = normalizeRole(roleFilter);
     // Role filter
-    if (roleFilter !== "All") {
-      filtered = filtered.filter((u) => u.role === roleFilter);
+    if (roleFilterValue !== "all") {
+      filtered = filtered.filter(
+        (u) => normalizeRole(u.role) === roleFilterValue,
+      );
     }
 
     // Status filter
-    if (statusFilter !== "All") {
+    if (statusFilter !== "all") {
       filtered = filtered.filter((u) =>
-        statusFilter === "Active" ? u.isActive !== false : u.isActive === false,
+        statusFilter === "active" ? isActiveStatus(u) : !isActiveStatus(u),
       );
     }
 
@@ -99,8 +116,17 @@ export default function AdminUsers() {
     }
   };
 
-  const roles = ["All", "Admin", "Client", "Freelancer"];
-  const statuses = ["All", "Active", "Suspended"];
+  const roles = [
+    { label: "All Roles", value: "all" },
+    { label: "Admin", value: "admin" },
+    { label: "Client", value: "client" },
+    { label: "Freelancer", value: "freelancer" },
+  ];
+  const statuses = [
+    { label: "All Statuses", value: "all" },
+    { label: "Active", value: "active" },
+    { label: "Suspended", value: "suspended" },
+  ];
 
   if (loading) {
     return <Loader />;
@@ -126,13 +152,13 @@ export default function AdminUsers() {
         <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-4">
           <p className="text-gray-400 text-sm">Total Clients</p>
           <p className="text-2xl font-bold text-white mt-1">
-            {users.filter((u) => u.role === "Client").length}
+            {users.filter((u) => u.roleNormalized === "client").length}
           </p>
         </div>
         <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-4">
           <p className="text-gray-400 text-sm">Total Freelancers</p>
           <p className="text-2xl font-bold text-white mt-1">
-            {users.filter((u) => u.role === "Freelancer").length}
+            {users.filter((u) => u.roleNormalized === "freelancer").length}
           </p>
         </div>
         <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-4">
@@ -172,8 +198,8 @@ export default function AdminUsers() {
             className="w-full pl-10 pr-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
           >
             {roles.map((role) => (
-              <option key={role} value={role}>
-                {role === "All" ? "All Roles" : role}
+              <option key={role.value} value={role.value}>
+                {role.label}
               </option>
             ))}
           </select>
@@ -191,8 +217,8 @@ export default function AdminUsers() {
             className="w-full pl-10 pr-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
           >
             {statuses.map((status) => (
-              <option key={status} value={status}>
-                {status === "All" ? "All Statuses" : status}
+              <option key={status.value} value={status.value}>
+                {status.label}
               </option>
             ))}
           </select>
@@ -245,9 +271,9 @@ export default function AdminUsers() {
                       <div className="flex items-center gap-3">
                         <div
                           className={`w-10 h-10 bg-gradient-to-br ${
-                            user.role === "Admin"
+                            user.roleNormalized === "admin"
                               ? "from-red-500 to-pink-600"
-                              : user.role === "Client"
+                              : user.roleNormalized === "client"
                                 ? "from-blue-500 to-cyan-600"
                                 : "from-purple-500 to-pink-600"
                           } rounded-full flex items-center justify-center text-sm font-bold text-white`}
@@ -274,15 +300,15 @@ export default function AdminUsers() {
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                          user.role === "Admin"
+                          user.roleNormalized === "admin"
                             ? "bg-red-500/20 text-red-300 border border-red-500/30"
-                            : user.role === "Client"
+                            : user.roleNormalized === "client"
                               ? "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                               : "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                         }`}
                       >
                         <LuShield size={12} className="mr-1" />
-                        {user.role}
+                        {user.displayRole}
                       </span>
                     </td>
                     <td className="px-6 py-4">

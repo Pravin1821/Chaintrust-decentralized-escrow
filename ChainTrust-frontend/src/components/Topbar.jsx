@@ -15,6 +15,7 @@ export default function Topbar() {
   const [network, setNetwork] = useState("Unknown");
   const [balance, setBalance] = useState(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const role = (user?.role || "").toLowerCase();
 
   useEffect(() => {
     // Try to read existing connection silently
@@ -110,11 +111,13 @@ export default function Topbar() {
           <button
             onClick={() => {
               const profilePath =
-                user?.role === "freelancer"
+                role === "freelancer"
                   ? "/freelancer/profile"
-                  : user?.role === "client"
+                  : role === "client"
                     ? "/client/profile"
-                    : "/profile";
+                    : role === "admin"
+                      ? "/admin/profile"
+                      : "/profile";
               navigate(profilePath);
             }}
             className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 border border-cyan-400/50 flex items-center justify-center text-[10px] sm:text-xs font-bold flex-shrink-0 hover:from-cyan-400 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-cyan-500/50 cursor-pointer"
@@ -135,7 +138,7 @@ export default function Topbar() {
           <div className="absolute top-16 left-0 right-0 px-4">
             <div className="rounded-xl bg-gray-900 border border-gray-800/60 p-3 shadow-xl">
               <div className="grid grid-cols-2 gap-2 text-sm">
-                {user?.role === "client" && (
+                {role === "client" && (
                   <>
                     <MobileLink
                       to="/client/dashboard"
@@ -169,7 +172,7 @@ export default function Topbar() {
                     />
                   </>
                 )}
-                {user?.role === "freelancer" && (
+                {role === "freelancer" && (
                   <>
                     <MobileLink
                       to="/freelancer/dashboard"
@@ -198,7 +201,7 @@ export default function Topbar() {
                     />
                   </>
                 )}
-                {user?.role === "admin" && (
+                {role === "admin" && (
                   <>
                     <MobileLink
                       to="/admin/dashboard"
@@ -206,7 +209,7 @@ export default function Topbar() {
                       onNavigate={() => setMenuOpen(false)}
                     />
                     <MobileLink
-                      to="/profile"
+                      to="/admin/profile"
                       label="Profile"
                       onNavigate={() => setMenuOpen(false)}
                     />

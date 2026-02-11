@@ -21,6 +21,12 @@ export default function AdminContracts() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedContract, setSelectedContract] = useState(null);
 
+  const formatUserName = (user) =>
+    user?.username || user?.name || user?.email || "Unknown";
+  const formatInitial = (user) =>
+    (formatUserName(user)?.[0] || "?").toUpperCase();
+  const getParty = (contract, key) => contract?.[`${key}Id`] || contract?.[key];
+
   useEffect(() => {
     fetchContracts();
   }, []);
@@ -44,6 +50,8 @@ export default function AdminContracts() {
   const filterContracts = () => {
     let filtered = contracts;
 
+    const search = searchTerm.toLowerCase();
+
     // Status filter
     if (statusFilter !== "All") {
       filtered = filtered.filter((c) => c.status === statusFilter);
@@ -51,16 +59,15 @@ export default function AdminContracts() {
 
     // Search filter
     if (searchTerm) {
-      filtered = filtered.filter(
-        (c) =>
-          c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.clientId?.username
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          c.freelancerId?.username
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()),
-      );
+      filtered = filtered.filter((c) => {
+        const client = getParty(c, "client");
+        const freelancer = getParty(c, "freelancer");
+        return (
+          c.title?.toLowerCase().includes(search) ||
+          formatUserName(client).toLowerCase().includes(search) ||
+          formatUserName(freelancer).toLowerCase().includes(search)
+        );
+      });
     }
 
     setFilteredContracts(filtered);
@@ -211,6 +218,8 @@ export default function AdminContracts() {
                 filteredContracts.map((contract) => {
                   const isStuck = isContractStuck(contract);
                   const age = getContractAge(contract.createdAt);
+                  const client = getParty(contract, "client");
+                  const freelancer = getParty(contract, "freelancer");
 
                   return (
                     <tr
@@ -240,23 +249,21 @@ export default function AdminContracts() {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                            {contract.clientId?.username?.[0]?.toUpperCase() ||
-                              "?"}
+                            {formatInitial(client)}
                           </div>
                           <span className="text-gray-300 text-sm">
-                            {contract.clientId?.username || "Unknown"}
+                            {formatUserName(client)}
                           </span>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        {contract.freelancerId ? (
+                        {freelancer ? (
                           <div className="flex items-center gap-2">
                             <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                              {contract.freelancerId?.username?.[0]?.toUpperCase() ||
-                                "?"}
+                              {formatInitial(freelancer)}
                             </div>
                             <span className="text-gray-300 text-sm">
-                              {contract.freelancerId?.username}
+                              {formatUserName(freelancer)}
                             </span>
                           </div>
                         ) : (
@@ -339,15 +346,14 @@ export default function AdminContracts() {
                 <p className="text-xs text-gray-500 uppercase mb-2">Client</p>
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
-                    {selectedContract.clientId?.username?.[0]?.toUpperCase() ||
-                      "?"}
+                    {formatInitial(getParty(selectedContract, "client"))}
                   </div>
                   <div>
                     <p className="text-white font-medium">
-                      {selectedContract.clientId?.username || "Unknown"}
+                      {formatUserName(getParty(selectedContract, "client"))}
                     </p>
                     <p className="text-gray-500 text-xs">
-                      {selectedContract.clientId?.email || ""}
+                      {getParty(selectedContract, "client")?.email || ""}
                     </p>
                   </div>
                 </div>
@@ -356,18 +362,19 @@ export default function AdminContracts() {
                 <p className="text-xs text-gray-500 uppercase mb-2">
                   Freelancer
                 </p>
-                {selectedContract.freelancerId ? (
+                {getParty(selectedContract, "freelancer") ? (
                   <div className="flex items-center gap-2">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
-                      {selectedContract.freelancerId?.username?.[0]?.toUpperCase() ||
-                        "?"}
+                      {formatInitial(getParty(selectedContract, "freelancer"))}
                     </div>
                     <div>
                       <p className="text-white font-medium">
-                        {selectedContract.freelancerId?.username}
+                        {formatUserName(
+                          getParty(selectedContract, "freelancer"),
+                        )}
                       </p>
                       <p className="text-gray-500 text-xs">
-                        {selectedContract.freelancerId?.email || ""}
+                        {getParty(selectedContract, "freelancer")?.email || ""}
                       </p>
                     </div>
                   </div>

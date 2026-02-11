@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { clientContractService } from "../../services/api.js";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 export default function CreateContract() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const preselectedFreelancer = location.state?.preselectedFreelancer || null;
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -11,9 +13,19 @@ export default function CreateContract() {
     currency: "ETH",
     deadline: "",
     conditions: "",
+    freelancer: preselectedFreelancer?._id || preselectedFreelancer?.id || "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (preselectedFreelancer) {
+      setForm((prev) => ({
+        ...prev,
+        freelancer: preselectedFreelancer._id || preselectedFreelancer.id || "",
+      }));
+    }
+  }, [preselectedFreelancer]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -38,6 +50,11 @@ export default function CreateContract() {
         <p className="text-xs md:text-sm text-gray-400">
           Step-based layout with Web3 styling
         </p>
+        {preselectedFreelancer && (
+          <p className="mt-2 text-sm text-cyan-300">
+            Inviting: {preselectedFreelancer.username || preselectedFreelancer.name}
+          </p>
+        )}
       </header>
 
       {error && (

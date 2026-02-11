@@ -24,6 +24,7 @@ import AdminDisputes from "./pages/admin/AdminDisputes.jsx";
 import AdminContracts from "./pages/admin/AdminContracts.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AdminMarketplace from "./pages/admin/AdminMarketplace.jsx";
+import AdminProfile from "./pages/admin/AdminProfile.jsx";
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -94,6 +95,7 @@ function App() {
           <Route path="/admin/contracts" element={<AdminContracts />} />
           <Route path="/admin/users" element={<AdminUsers />} />
           <Route path="/admin/marketplace" element={<AdminMarketplace />} />
+          <Route path="/admin/profile" element={<AdminProfile />} />
         </Route>
       </Route>
 

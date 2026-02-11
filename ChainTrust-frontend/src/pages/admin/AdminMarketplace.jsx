@@ -1,421 +1,511 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "../../api/axios";
 import {
   LuShoppingCart,
   LuSearch,
-  LuEye,
-  LuEyeOff,
   LuFlag,
+  LuEyeOff,
   LuCircleCheck,
   LuTriangleAlert,
-  LuDollarSign,
-  LuUser,
+  LuRefreshCw,
 } from "react-icons/lu";
-import Loader from "../../components/Loader";
 import StatusBadge from "../../components/StatusBadge";
+import { useAuth } from "../../context/AuthContext";
+
+const statusOptions = [
+  { label: "All", value: "all" },
+  { label: "Active", value: "active" },
+  { label: "Flagged", value: "flagged" },
+  { label: "Hidden", value: "hidden" },
+];
 
 export default function AdminMarketplace() {
+  const { user } = useAuth();
   const [contracts, setContracts] = useState([]);
-  const [filteredContracts, setFilteredContracts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [moderationFilter, setModerationFilter] = useState("All");
-  const [selectedContract, setSelectedContract] = useState(null);
-  const [moderating, setModerating] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [budgetMin, setBudgetMin] = useState("");
+  const [budgetMax, setBudgetMax] = useState("");
+  const [selected, setSelected] = useState(null);
+  const [action, setAction] = useState(null); // flag | hide | restore
+  const [reason, setReason] = useState("");
+  const [actionLoading, setActionLoading] = useState(false);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
-    fetchMarketplaceContracts();
+    fetchContracts();
   }, []);
 
-  useEffect(() => {
-    filterContracts();
-  }, [contracts, searchTerm, moderationFilter]);
-
-  const fetchMarketplaceContracts = async () => {
+  const fetchContracts = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("/contracts?status=Created");
-      setContracts(response.data);
-    } catch (error) {
-      console.error("Failed to fetch marketplace contracts:", error);
+      const res = await axios.get("/contracts?admin=true");
+      // Only moderation-eligible listings (created / visible)
+      setContracts(res.data || []);
+    } catch (e) {
+      console.error("Failed to load marketplace listings", e);
+      setToast({ type: "error", message: "Failed to load listings" });
     } finally {
       setLoading(false);
     }
   };
 
-  const filterContracts = () => {
-    let filtered = contracts;
-
-    // Moderation filter
-    if (moderationFilter === "Flagged") {
-      filtered = filtered.filter((c) => c.isFlagged);
-    } else if (moderationFilter === "Hidden") {
-      filtered = filtered.filter((c) => c.isHidden);
-    } else if (moderationFilter === "Active") {
-      filtered = filtered.filter((c) => !c.isFlagged && !c.isHidden);
-    }
-
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (c) =>
-          c.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          c.clientId?.username
-            ?.toLowerCase()
-            .includes(searchTerm.toLowerCase()),
-      );
-    }
-
-    setFilteredContracts(filtered);
-  };
-
-  const handleModerateContract = async (contractId, action) => {
-    try {
-      setModerating(true);
-      await axios.patch(`/contracts/${contractId}/moderate`, {
-        action,
+  const filtered = useMemo(() => {
+    return (contracts || [])
+      .filter((c) => {
+        if (statusFilter === "flagged") return c.isFlagged;
+        if (statusFilter === "hidden") return c.isHidden;
+        if (statusFilter === "active") return !c.isFlagged && !c.isHidden;
+        return true;
+      })
+      .filter((c) => {
+        if (!search) return true;
+        const q = search.toLowerCase();
+        const clientName = c.clientId?.username || c.clientId?.name || "";
+        return (
+          c.title?.toLowerCase().includes(q) ||
+          clientName.toLowerCase().includes(q)
+        );
+      })
+      .filter((c) => {
+        const min = budgetMin ? Number(budgetMin) : null;
+        const max = budgetMax ? Number(budgetMax) : null;
+        const amt = Number(c.escrowAmount || c.amount || 0);
+        if (min !== null && amt < min) return false;
+        if (max !== null && amt > max) return false;
+        return true;
       });
+  }, [contracts, statusFilter, search, budgetMin, budgetMax]);
 
-      // Update local state
-      setContracts((prev) =>
-        prev.map((c) => {
-          if (c._id === contractId) {
-            if (action === "flag") {
-              return { ...c, isFlagged: true };
-            } else if (action === "hide") {
-              return { ...c, isHidden: true };
-            } else if (action === "restore") {
-              return { ...c, isFlagged: false, isHidden: false };
-            }
-          }
-          return c;
-        }),
-      );
+  const stats = useMemo(() => {
+    const total = contracts.length;
+    const flagged = contracts.filter((c) => c.isFlagged).length;
+    const hidden = contracts.filter((c) => c.isHidden).length;
+    const active = contracts.filter((c) => !c.isFlagged && !c.isHidden).length;
+    return { total, flagged, hidden, active };
+  }, [contracts]);
 
-      setSelectedContract(null);
-    } catch (error) {
-      console.error("Failed to moderate contract:", error);
-      alert("Failed to moderate contract. Please try again.");
+  const resetActionState = () => {
+    setAction(null);
+    setReason("");
+  };
+
+  const openAction = (contract, type) => {
+    setSelected(contract);
+    setAction(type);
+    setReason("");
+  };
+
+  const handleModerate = async () => {
+    if (!selected || !action) return;
+    if (!reason || reason.trim().length < 5) {
+      setToast({
+        type: "error",
+        message: "Please provide a reason (min 5 characters)",
+      });
+      return;
+    }
+    try {
+      setActionLoading(true);
+      await axios.patch(`/contracts/${selected._id}/moderate`, {
+        action,
+        reason,
+      });
+      setToast({ type: "success", message: "Action completed" });
+      resetActionState();
+      setSelected(null);
+      await fetchContracts();
+    } catch (e) {
+      console.error("Moderation failed", e);
+      setToast({ type: "error", message: "Moderation failed" });
     } finally {
-      setModerating(false);
+      setActionLoading(false);
     }
   };
 
-  const flaggedContracts = contracts.filter((c) => c.isFlagged);
-  const hiddenContracts = contracts.filter((c) => c.isHidden);
+  const renderStatusPill = (contract) => {
+    if (contract.isHidden) {
+      return (
+        <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
+          Hidden
+        </span>
+      );
+    }
+    if (contract.isFlagged) {
+      return (
+        <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-300 border border-orange-500/30">
+          Flagged
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+        Active
+      </span>
+    );
+  };
 
-  if (loading) {
-    return <Loader />;
+  const loadingSkeletons = Array.from({ length: 6 });
+
+  if (user?.role?.toLowerCase?.() !== "admin") {
+    return (
+      <div className="flex min-h-screen">
+        <main className="flex-1 p-6 text-white">Unauthorized</main>
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center">
-            <LuShoppingCart size={24} className="text-white" />
+    <div className="flex flex-col min-h-screen gap-6 p-0">
+      <div className="flex flex-col gap-2">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
+              <LuShoppingCart size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                Marketplace Moderation
+              </h1>
+              <p className="text-sm text-gray-400">
+                Real-time listing oversight and control
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-white">
-              Marketplace Moderation
-            </h1>
-            <p className="text-gray-400">
-              {contracts.length} marketplace listings, {flaggedContracts.length}{" "}
-              flagged, {hiddenContracts.length} hidden
-            </p>
-          </div>
+          <button
+            onClick={fetchContracts}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg bg-gray-800/70 border border-gray-700 text-gray-200 hover:bg-gray-700 transition"
+          >
+            <LuRefreshCw size={16} /> Refresh
+          </button>
         </div>
-      </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center">
-              <LuCircleCheck size={20} className="text-green-400" />
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Active Listings</p>
-              <p className="text-2xl font-bold text-white">
-                {contracts.filter((c) => !c.isFlagged && !c.isHidden).length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-orange-500/20 rounded-lg flex items-center justify-center">
-              <LuFlag size={20} className="text-orange-400" />
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Flagged</p>
-              <p className="text-2xl font-bold text-orange-400">
-                {flaggedContracts.length}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center">
-              <LuEyeOff size={20} className="text-red-400" />
-            </div>
-            <div>
-              <p className="text-gray-400 text-sm">Hidden</p>
-              <p className="text-2xl font-bold text-red-400">
-                {hiddenContracts.length}
-              </p>
-            </div>
-          </div>
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard
+            title="Total Listings"
+            value={stats.total}
+            color="from-slate-600 to-slate-800"
+          />
+          <StatCard
+            title="Active Listings"
+            value={stats.active}
+            color="from-emerald-600 to-green-700"
+          />
+          <StatCard
+            title="Flagged Listings"
+            value={stats.flagged}
+            color="from-orange-600 to-amber-600"
+          />
+          <StatCard
+            title="Hidden Listings"
+            value={stats.hidden}
+            color="from-red-600 to-pink-600"
+          />
         </div>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Search */}
-        <div className="relative">
+      <div className="flex flex-col md:flex-row gap-3 md:items-center">
+        <div className="flex-1 relative">
           <LuSearch
-            size={20}
+            size={18}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
           />
           <input
-            type="text"
-            placeholder="Search marketplace listings..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by title or client"
+            className="w-full pl-10 pr-4 py-3 rounded-lg bg-gray-800/70 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
           />
         </div>
-
-        {/* Moderation Filter */}
-        <div className="relative">
-          <LuFlag
-            size={20}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-          />
+        <div className="md:w-40">
           <select
-            value={moderationFilter}
-            onChange={(e) => setModerationFilter(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-800/60 border border-gray-700 rounded-lg text-white focus:outline-none focus:border-purple-500 appearance-none cursor-pointer"
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="w-full px-3 py-3 rounded-lg bg-gray-800/70 border border-gray-700 text-white focus:outline-none focus:border-purple-500"
           >
-            <option value="All">All Listings</option>
-            <option value="Active">Active Only</option>
-            <option value="Flagged">Flagged Only</option>
-            <option value="Hidden">Hidden Only</option>
+            {statusOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
           </select>
         </div>
+        <div className="grid grid-cols-2 gap-2 md:w-64">
+          <input
+            type="number"
+            value={budgetMin}
+            onChange={(e) => setBudgetMin(e.target.value)}
+            placeholder="Min budget"
+            className="w-full px-3 py-3 rounded-lg bg-gray-800/70 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+          />
+          <input
+            type="number"
+            value={budgetMax}
+            onChange={(e) => setBudgetMax(e.target.value)}
+            placeholder="Max budget"
+            className="w-full px-3 py-3 rounded-lg bg-gray-800/70 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500"
+          />
+        </div>
       </div>
 
-      {/* Contracts Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredContracts.length === 0 ? (
-          <div className="col-span-full bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-12 text-center">
-            <LuShoppingCart size={48} className="text-gray-600 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">
-              No marketplace listings found
-            </p>
-          </div>
-        ) : (
-          filteredContracts.map((contract) => (
+      {/* Content */}
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {loadingSkeletons.map((_, idx) => (
             <div
-              key={contract._id}
-              className={`bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border ${
-                contract.isHidden
-                  ? "border-red-500/50"
-                  : contract.isFlagged
-                    ? "border-orange-500/50"
-                    : "border-gray-700/50"
-              } p-4 space-y-3 hover:border-purple-500/40 transition-all`}
-            >
-              {/* Contract Header */}
-              <div className="flex items-start justify-between">
-                <h3 className="text-white font-bold line-clamp-2 flex-1">
-                  {contract.title}
-                </h3>
-                {contract.isHidden && (
-                  <LuEyeOff size={16} className="text-red-400 shrink-0 ml-2" />
-                )}
-                {contract.isFlagged && !contract.isHidden && (
-                  <LuFlag size={16} className="text-orange-400 shrink-0 ml-2" />
-                )}
-              </div>
+              key={idx}
+              className="h-48 rounded-xl bg-gray-800/50 border border-gray-700/60 animate-pulse"
+            />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-gray-700 bg-gray-900/50 p-10 text-center text-gray-400">
+          <LuShoppingCart size={40} className="mb-3 text-gray-600" />
+          <p className="text-lg">No listings match the current filters.</p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <div className="hidden md:block overflow-x-auto border border-gray-700/60 rounded-xl bg-gray-900/50">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-800/70 text-gray-400 uppercase text-xs">
+                <tr>
+                  <th className="text-left px-4 py-3">Title</th>
+                  <th className="text-left px-4 py-3">Client</th>
+                  <th className="text-left px-4 py-3">Budget</th>
+                  <th className="text-left px-4 py-3">Applications</th>
+                  <th className="text-left px-4 py-3">Created</th>
+                  <th className="text-left px-4 py-3">Status</th>
+                  <th className="text-left px-4 py-3">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-800 text-gray-200">
+                {filtered.map((c) => (
+                  <tr key={c._id} className="hover:bg-gray-800/40">
+                    <td className="px-4 py-3 font-semibold">{c.title}</td>
+                    <td className="px-4 py-3 flex items-center gap-2">
+                      <span className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white text-xs font-bold flex items-center justify-center">
+                        {c.clientId?.username?.[0]?.toUpperCase() || "?"}
+                      </span>
+                      <span className="truncate">
+                        {c.clientId?.username || "Unknown"}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-emerald-300 font-semibold">
+                      ${c.escrowAmount?.toLocaleString() || 0}
+                    </td>
+                    <td className="px-4 py-3">
+                      {c.applicationsCount ?? c.applications?.length ?? 0}
+                    </td>
+                    <td className="px-4 py-3 text-gray-400">
+                      {new Date(c.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3 flex items-center gap-2">
+                      {renderStatusPill(c)}
+                    </td>
+                    <td className="px-4 py-3">
+                      <ActionButtons
+                        contract={c}
+                        onAction={openAction}
+                        disabled={actionLoading}
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-              {/* Description */}
-              <p className="text-gray-400 text-sm line-clamp-2">
-                {contract.description || "No description"}
-              </p>
-
-              {/* Client Info */}
-              <div className="flex items-center gap-2 pt-2 border-t border-gray-700">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-xs font-bold text-white">
-                  {contract.clientId?.username?.[0]?.toUpperCase() || "?"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-300 truncate">
-                    {contract.clientId?.username || "Unknown"}
-                  </p>
-                </div>
-              </div>
-
-              {/* Escrow Amount */}
-              <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                <span className="text-xs text-gray-500">Escrow Amount</span>
-                <span className="text-green-400 font-bold">
-                  ${contract.escrowAmount?.toLocaleString() || 0}
-                </span>
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <StatusBadge status={contract.status} />
-                {contract.isHidden && (
-                  <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
-                    HIDDEN
-                  </span>
-                )}
-                {contract.isFlagged && !contract.isHidden && (
-                  <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-300 border border-orange-500/30">
-                    FLAGGED
-                  </span>
-                )}
-              </div>
-
-              {/* Actions */}
-              <button
-                onClick={() => setSelectedContract(contract)}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-purple-600/20 hover:bg-purple-600/30 text-purple-300 rounded-lg text-sm font-medium transition-colors"
+          <div className="grid grid-cols-1 md:hidden gap-3">
+            {filtered.map((c) => (
+              <div
+                key={c._id}
+                className="rounded-xl border border-gray-700 bg-gray-900/60 p-4 space-y-3 shadow-lg"
               >
-                <LuEye size={14} />
-                Moderate
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* Moderation Modal */}
-      {selectedContract && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-gray-700 max-w-2xl w-full p-6 space-y-4 my-8">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-2xl font-bold text-white">
-                  {selectedContract.title}
-                </h3>
-                <p className="text-gray-400 text-sm">
-                  Contract ID: {selectedContract._id}
-                </p>
-              </div>
-              {selectedContract.isHidden && (
-                <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
-                  HIDDEN
-                </span>
-              )}
-              {selectedContract.isFlagged && !selectedContract.isHidden && (
-                <span className="inline-flex px-3 py-1 rounded-full text-xs font-medium bg-orange-500/20 text-orange-300 border border-orange-500/30">
-                  FLAGGED
-                </span>
-              )}
-            </div>
-
-            <div className="bg-gray-900/50 rounded-lg p-4">
-              <p className="text-xs text-gray-500 uppercase mb-2">
-                Description
-              </p>
-              <p className="text-gray-300">
-                {selectedContract.description || "No description"}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="bg-gray-900/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 uppercase mb-2">Client</p>
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
-                    {selectedContract.clientId?.username?.[0]?.toUpperCase() ||
-                      "?"}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-white font-semibold truncate">
+                      {c.title}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {new Date(c.createdAt).toLocaleDateString()}
+                    </p>
                   </div>
-                  <span className="text-white font-medium">
-                    {selectedContract.clientId?.username || "Unknown"}
+                  {renderStatusPill(c)}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-300">
+                  <span className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white text-xs font-bold flex items-center justify-center">
+                    {c.clientId?.username?.[0]?.toUpperCase() || "?"}
                   </span>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate">
+                      {c.clientId?.username || "Unknown"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      ${c.escrowAmount?.toLocaleString() || 0} •{" "}
+                      {c.applicationsCount ?? c.applications?.length ?? 0}{" "}
+                      applications
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="bg-gray-900/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 uppercase mb-2">
-                  Escrow Amount
-                </p>
-                <p className="text-2xl font-bold text-green-400">
-                  ${selectedContract.escrowAmount?.toLocaleString() || 0}
-                </p>
-              </div>
-            </div>
-
-            <div className="bg-orange-900/20 border border-orange-500/50 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <LuTriangleAlert
-                  size={20}
-                  className="text-orange-400 shrink-0"
+                <div className="flex items-center gap-2 text-xs text-gray-400">
+                  <StatusBadge status={c.status} />
+                </div>
+                <ActionButtons
+                  contract={c}
+                  onAction={openAction}
+                  disabled={actionLoading}
                 />
-                <div>
-                  <p className="text-orange-200 text-sm font-medium">
-                    Moderation Note
-                  </p>
-                  <p className="text-orange-300/80 text-xs mt-1">
-                    Admin cannot edit contract content. You can only flag
-                    suspicious listings or hide spam/fraud.
-                  </p>
-                </div>
               </div>
-            </div>
-
-            <div className="flex gap-3 pt-4 border-t border-gray-700">
-              {selectedContract.isHidden || selectedContract.isFlagged ? (
-                <button
-                  onClick={() =>
-                    handleModerateContract(selectedContract._id, "restore")
-                  }
-                  disabled={moderating}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-medium transition-all disabled:opacity-50"
-                >
-                  <LuCircleCheck size={18} />
-                  {moderating ? "Restoring..." : "Restore Listing"}
-                </button>
-              ) : (
-                <>
-                  <button
-                    onClick={() =>
-                      handleModerateContract(selectedContract._id, "flag")
-                    }
-                    disabled={moderating}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-lg font-medium transition-all disabled:opacity-50"
-                  >
-                    <LuFlag size={18} />
-                    {moderating ? "Flagging..." : "Flag as Suspicious"}
-                  </button>
-                  <button
-                    onClick={() =>
-                      handleModerateContract(selectedContract._id, "hide")
-                    }
-                    disabled={moderating}
-                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white rounded-lg font-medium transition-all disabled:opacity-50"
-                  >
-                    <LuEyeOff size={18} />
-                    {moderating ? "Hiding..." : "Hide Listing"}
-                  </button>
-                </>
-              )}
-            </div>
-
-            <button
-              onClick={() => setSelectedContract(null)}
-              disabled={moderating}
-              className="w-full px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              Close
-            </button>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {selected && action && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-gradient-to-br from-gray-800 to-gray-900 w-full max-w-lg rounded-xl border border-gray-700 p-6 space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="w-11 h-11 rounded-lg bg-red-500/20 flex items-center justify-center text-red-300">
+                <LuTriangleAlert size={22} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-lg font-bold text-white">
+                  Confirm {action}
+                </h3>
+                <p className="text-sm text-gray-400">
+                  Provide a reason to {action} this listing. This action affects
+                  visibility for all users.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-gray-900/60 border border-gray-700/60">
+              <p className="text-sm text-gray-300 font-semibold">
+                {selected.title}
+              </p>
+              <p className="text-xs text-gray-500">
+                Client: {selected.clientId?.username || "Unknown"}
+              </p>
+              <p className="text-xs text-gray-500">
+                Budget: ${selected.escrowAmount?.toLocaleString() || 0}
+              </p>
+            </div>
+
+            <label className="block space-y-2">
+              <span className="text-xs text-gray-400">Reason</span>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 rounded-lg bg-gray-900/70 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-red-500"
+                placeholder="Explain why you are taking this action"
+              />
+            </label>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                onClick={handleModerate}
+                disabled={actionLoading}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white bg-red-600 hover:bg-red-500 disabled:opacity-60"
+              >
+                {actionLoading ? "Processing..." : "Confirm"}
+              </button>
+              <button
+                onClick={() => {
+                  resetActionState();
+                  setSelected(null);
+                }}
+                disabled={actionLoading}
+                className="flex-1 inline-flex items-center justify-center px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 text-white border border-gray-700 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <div
+            className={`px-4 py-3 rounded-lg shadow-lg border text-sm ${
+              toast.type === "error"
+                ? "bg-red-900/70 border-red-500/40 text-red-100"
+                : "bg-emerald-900/70 border-emerald-500/40 text-emerald-100"
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ title, value, color }) {
+  return (
+    <div
+      className={`rounded-xl border border-gray-700/60 bg-gradient-to-br ${color} p-4 text-white shadow-inner`}
+    >
+      <p className="text-sm text-gray-200/80">{title}</p>
+      <p className="text-2xl font-bold mt-1">{value}</p>
+    </div>
+  );
+}
+
+function ActionButtons({ contract, onAction, disabled }) {
+  const isActive = !contract.isFlagged && !contract.isHidden;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {isActive && (
+        <>
+          <button
+            onClick={() => onAction(contract, "flag")}
+            disabled={disabled}
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-orange-500/20 text-orange-200 border border-orange-500/30 hover:bg-orange-500/30 disabled:opacity-60"
+          >
+            Flag
+          </button>
+          <button
+            onClick={() => onAction(contract, "hide")}
+            disabled={disabled}
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-60"
+          >
+            Hide
+          </button>
+        </>
+      )}
+      {contract.isFlagged && !contract.isHidden && (
+        <>
+          <button
+            onClick={() => onAction(contract, "hide")}
+            disabled={disabled}
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-red-500/20 text-red-200 border border-red-500/30 hover:bg-red-500/30 disabled:opacity-60"
+          >
+            Hide
+          </button>
+          <button
+            onClick={() => onAction(contract, "restore")}
+            disabled={disabled}
+            className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-60"
+          >
+            Restore
+          </button>
+        </>
+      )}
+      {contract.isHidden && (
+        <button
+          onClick={() => onAction(contract, "restore")}
+          disabled={disabled}
+          className="px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/30 disabled:opacity-60"
+        >
+          Restore
+        </button>
       )}
     </div>
   );

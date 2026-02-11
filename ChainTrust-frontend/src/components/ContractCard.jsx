@@ -47,11 +47,15 @@ export default function ContractCard({
       case "Assigned":
         return "Funded";
       case "Funded":
-        return "Submitted";
+        return "InProgress";
       case "Submitted":
         return "Approved";
       case "Approved":
         return "Paid";
+      case "Paid":
+        return "Complete";
+      case "Disputed":
+        return "Resolution";
       default:
         return "—";
     }

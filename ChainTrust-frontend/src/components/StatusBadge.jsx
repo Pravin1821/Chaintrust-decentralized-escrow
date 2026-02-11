@@ -16,6 +16,10 @@ export default function StatusBadge({ status }) {
       color: "bg-purple-500/20 text-purple-300 border-purple-500/30",
       icon: "📦",
     },
+    Approved: {
+      color: "bg-green-500/20 text-green-300 border-green-500/30",
+      icon: "✅",
+    },
     Paid: {
       color: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
       icon: "✅",

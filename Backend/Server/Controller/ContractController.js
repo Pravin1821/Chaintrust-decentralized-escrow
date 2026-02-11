@@ -2,19 +2,47 @@ const Contract = require("../Model/Contract");
 
 exports.createContract = async (req, res) => {
   try {
-    const { title, description, amount, deadline } = req.body;
+    const {
+      title,
+      description,
+      amount,
+      deadline,
+      freelancer: invitedFreelancer,
+    } = req.body;
+
+    let freelancerUser = null;
+    if (invitedFreelancer) {
+      const User = require("../Model/User");
+      freelancerUser = await User.findOne({
+        _id: invitedFreelancer,
+        role: "Freelancer",
+        isActive: true,
+      });
+      if (!freelancerUser) {
+        return res
+          .status(400)
+          .json({ message: "Freelancer not found or inactive" });
+      }
+    }
+
+    const status = freelancerUser ? "Assigned" : "Created";
+
     const newContract = new Contract({
       client: req.user._id,
       title,
       description,
       amount,
       deadline,
+      freelancer: freelancerUser ? freelancerUser._id : null,
+      status,
     });
+
     await newContract.save();
     res
       .status(201)
       .json({ message: "Contract created successfully", newContract });
   } catch (error) {
+    console.error("createContract error", error);
     res.status(500).json({ message: "Server error" });
   }
 };
@@ -23,6 +51,10 @@ exports.getContractById = async (req, res) => {
   try {
     const contracts = await Contract.find({ client: req.user._id })
       .populate({ path: "freelancer", select: "username email name" })
+      .populate({
+        path: "applications.freelancer",
+        select: "username email name",
+      })
       .sort({ createdAt: -1 });
     res.status(200).json(contracts);
   } catch (error) {
@@ -32,8 +64,21 @@ exports.getContractById = async (req, res) => {
 
 exports.assignFreelancer = async (req, res) => {
   try {
-    const { freelancerId } = req.body;
+    const { freelancerId, allowWithoutApplication } = req.body;
     const contractId = req.params.id;
+    const User = require("../Model/User");
+
+    const freelancerUser = await User.findOne({
+      _id: freelancerId,
+      role: "Freelancer",
+      isActive: true,
+    });
+    if (!freelancerUser) {
+      return res
+        .status(400)
+        .json({ message: "Freelancer not found or inactive" });
+    }
+
     const existingContract = await Contract.findById(contractId);
     if (!existingContract) {
       return res.status(404).json({ message: "Contract not found" });
@@ -41,19 +86,23 @@ exports.assignFreelancer = async (req, res) => {
     if (existingContract.client.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
-    if (existingContract.status !== "Created") {
+    if (!["Created", "Assigned"].includes(existingContract.status)) {
       return res.status(400).json({
-        message: "Freelancer can only be assigned to Created contracts",
+        message:
+          "Freelancer can only be assigned on Created/Assigned contracts",
       });
     }
+
     const hasApplied = existingContract.applications.some(
       (app) => app.freelancer.toString() === freelancerId,
     );
-    if (!hasApplied) {
-      return res
-        .status(400)
-        .json({ message: "Freelancer has not applied to this contract" });
+    if (!hasApplied && !allowWithoutApplication) {
+      return res.status(400).json({
+        message:
+          "Freelancer has not applied to this contract. Pass allowWithoutApplication to override.",
+      });
     }
+
     existingContract.freelancer = freelancerId;
     existingContract.status = "Assigned";
     existingContract.updatedAt = Date.now();
@@ -62,6 +111,7 @@ exports.assignFreelancer = async (req, res) => {
       .status(200)
       .json({ message: "Freelancer assigned successfully", existingContract });
   } catch (error) {
+    console.error("assignFreelancer error", error);
     res.status(500).json({ message: "Server error" });
   }
 };

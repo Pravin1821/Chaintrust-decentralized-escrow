@@ -21,6 +21,12 @@ export default function AdminDisputes() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [resolutionAction, setResolutionAction] = useState(null);
 
+  const formatUserName = (user) =>
+    user?.username || user?.name || user?.email || "Unknown";
+  const formatInitial = (user) =>
+    (formatUserName(user)?.[0] || "?").toUpperCase();
+  const getContract = (dispute) => dispute?.contractId || dispute?.contract;
+
   useEffect(() => {
     fetchDisputes();
   }, []);
@@ -132,118 +138,125 @@ export default function AdminDisputes() {
             </p>
           </div>
         ) : (
-          openDisputesList.map((dispute) => (
-            <div
-              key={dispute._id}
-              className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-red-500/50 p-6 space-y-4"
-            >
-              {/* Dispute Header */}
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-xl font-bold text-white">
-                      {dispute.contractId?.title || "Unknown Contract"}
-                    </h3>
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
-                      DISPUTED
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
-                    <span className="flex items-center gap-1">
-                      <LuCalendar size={14} />
-                      {new Date(dispute.createdAt).toLocaleDateString()}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <LuDollarSign size={14} />$
-                      {dispute.contractId?.escrowAmount?.toLocaleString() || 0}
-                    </span>
-                  </div>
-                </div>
-              </div>
+          openDisputesList.map((dispute) => {
+            const contract = getContract(dispute);
+            const client = contract?.clientId || contract?.client;
+            const freelancer = contract?.freelancerId || contract?.freelancer;
+            const contractTitle = contract?.title || "Unknown Contract";
 
-              {/* Parties */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-gray-900/50 rounded-lg p-4">
-                  <p className="text-xs text-gray-500 uppercase mb-2">Client</p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
-                      {dispute.contractId?.clientId?.username?.[0]?.toUpperCase() ||
-                        "?"}
+            return (
+              <div
+                key={dispute._id}
+                className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-red-500/50 p-6 space-y-4"
+              >
+                {/* Dispute Header */}
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-xl font-bold text-white">
+                        {contractTitle}
+                      </h3>
+                      <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-300 border border-red-500/30">
+                        DISPUTED
+                      </span>
                     </div>
-                    <span className="text-white font-medium">
-                      {dispute.contractId?.clientId?.username || "Unknown"}
-                    </span>
-                  </div>
-                </div>
-                <div className="bg-gray-900/50 rounded-lg p-4">
-                  <p className="text-xs text-gray-500 uppercase mb-2">
-                    Freelancer
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
-                      {dispute.contractId?.freelancerId?.username?.[0]?.toUpperCase() ||
-                        "?"}
+                    <div className="flex items-center gap-4 mt-2 text-sm text-gray-400">
+                      <span className="flex items-center gap-1">
+                        <LuCalendar size={14} />
+                        {new Date(dispute.createdAt).toLocaleDateString()}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <LuDollarSign size={14} />$
+                        {contract?.escrowAmount?.toLocaleString() || 0}
+                      </span>
                     </div>
-                    <span className="text-white font-medium">
-                      {dispute.contractId?.freelancerId?.username || "Unknown"}
-                    </span>
                   </div>
                 </div>
-              </div>
 
-              {/* Dispute Reason */}
-              <div className="bg-gray-900/50 rounded-lg p-4">
-                <p className="text-xs text-gray-500 uppercase mb-2">
-                  Dispute Reason
-                </p>
-                <p className="text-gray-300">
-                  {dispute.reason || "No reason provided"}
-                </p>
-              </div>
+                {/* Parties */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-900/50 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 uppercase mb-2">
+                      Client
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                        {formatInitial(client)}
+                      </div>
+                      <span className="text-white font-medium">
+                        {formatUserName(client)}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="bg-gray-900/50 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 uppercase mb-2">
+                      Freelancer
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-sm font-bold text-white">
+                        {formatInitial(freelancer)}
+                      </div>
+                      <span className="text-white font-medium">
+                        {formatUserName(freelancer)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
-              {/* Contract Details */}
-              {dispute.contractId && (
+                {/* Dispute Reason */}
                 <div className="bg-gray-900/50 rounded-lg p-4">
                   <p className="text-xs text-gray-500 uppercase mb-2">
-                    Contract Details
+                    Dispute Reason
                   </p>
-                  <p className="text-gray-300 text-sm">
-                    {dispute.contractId.description || "No description"}
+                  <p className="text-gray-300">
+                    {dispute.reason || "No reason provided"}
                   </p>
-                  {dispute.contractId.workSubmitted && (
-                    <div className="mt-3 pt-3 border-t border-gray-700">
-                      <p className="text-xs text-gray-500 mb-1">
-                        Submitted Work:
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        {dispute.contractId.workSubmitted}
-                      </p>
-                    </div>
-                  )}
                 </div>
-              )}
 
-              {/* Resolution Actions */}
-              <div className="flex gap-3 pt-4 border-t border-gray-700">
-                <button
-                  onClick={() => openConfirmModal(dispute, "freelancer")}
-                  disabled={resolving}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <LuCheck size={18} />
-                  Resolve in Favor of Freelancer
-                </button>
-                <button
-                  onClick={() => openConfirmModal(dispute, "client")}
-                  disabled={resolving}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <LuX size={18} />
-                  Resolve in Favor of Client
-                </button>
+                {/* Contract Details */}
+                {contract && (
+                  <div className="bg-gray-900/50 rounded-lg p-4">
+                    <p className="text-xs text-gray-500 uppercase mb-2">
+                      Contract Details
+                    </p>
+                    <p className="text-gray-300 text-sm">
+                      {contract.description || "No description"}
+                    </p>
+                    {contract.workSubmitted && (
+                      <div className="mt-3 pt-3 border-t border-gray-700">
+                        <p className="text-xs text-gray-500 mb-1">
+                          Submitted Work:
+                        </p>
+                        <p className="text-gray-400 text-sm">
+                          {contract.workSubmitted}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Resolution Actions */}
+                <div className="flex gap-3 pt-4 border-t border-gray-700">
+                  <button
+                    onClick={() => openConfirmModal(dispute, "freelancer")}
+                    disabled={resolving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <LuCheck size={18} />
+                    Resolve in Favor of Freelancer
+                  </button>
+                  <button
+                    onClick={() => openConfirmModal(dispute, "client")}
+                    disabled={resolving}
+                    className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <LuX size={18} />
+                    Resolve in Favor of Client
+                  </button>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -262,7 +275,7 @@ export default function AdminDisputes() {
               >
                 <div className="flex-1">
                   <p className="text-white font-medium">
-                    {dispute.contractId?.title || "Unknown Contract"}
+                    {getContract(dispute)?.title || "Unknown Contract"}
                   </p>
                   <p className="text-gray-400 text-sm">
                     Resolved in favor of{" "}

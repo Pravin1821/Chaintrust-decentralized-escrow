@@ -44,9 +44,15 @@ export default function AdminDashboard() {
       const contracts = contractsRes.data;
       const disputes = disputesRes.data;
 
-      const totalClients = users.filter((u) => u.role === "Client").length;
+      const normalizeRole = (role) => String(role || "").toLowerCase();
+      const formatUserName = (user) =>
+        user?.username || user?.name || user?.email || "Unknown";
+
+      const totalClients = users.filter(
+        (u) => normalizeRole(u.role) === "client",
+      ).length;
       const totalFreelancers = users.filter(
-        (u) => u.role === "Freelancer",
+        (u) => normalizeRole(u.role) === "freelancer",
       ).length;
       const activeContracts = contracts.filter((c) =>
         ["Funded", "Submitted", "InProgress"].includes(c.status),
@@ -69,7 +75,11 @@ export default function AdminDashboard() {
         totalEscrowFunded,
         openDisputes,
         criticalContracts,
-        recentActivity: contracts.slice(0, 5),
+        recentActivity: contracts.slice(0, 5).map((c) => ({
+          ...c,
+          clientDisplay: formatUserName(c.clientId || c.client),
+          freelancerDisplay: formatUserName(c.freelancerId || c.freelancer),
+        })),
       });
     } catch (error) {
       console.error("Failed to fetch dashboard stats:", error);
@@ -125,20 +135,22 @@ export default function AdminDashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center">
           <LuShield size={24} className="text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
-          <p className="text-gray-400">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white">
+            Admin Dashboard
+          </h1>
+          <p className="text-gray-400 text-sm sm:text-base">
             Platform overview and critical metrics
           </p>
         </div>
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
         {metricCards.map((metric, index) => (
           <div
             key={index}
@@ -217,7 +229,7 @@ export default function AdminDashboard() {
       {/* Recent Activity */}
       <div className="bg-gradient-to-br from-gray-800/60 to-gray-900/60 rounded-xl border border-gray-700/50 p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+          <h2 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
             <LuClock size={20} />
             Recent Contract Activity
           </h2>
@@ -240,8 +252,8 @@ export default function AdminDashboard() {
                 <div className="flex-1">
                   <p className="text-white font-medium">{contract.title}</p>
                   <p className="text-gray-400 text-sm">
-                    {contract.clientId?.username || "Unknown"} →{" "}
-                    {contract.freelancerId?.username || "Not assigned"}
+                    {contract.clientDisplay || "Unknown"} → {""}
+                    {contract.freelancerDisplay || "Not assigned"}
                   </p>
                 </div>
                 <div className="text-right">
