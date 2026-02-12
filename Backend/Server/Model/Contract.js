@@ -186,5 +186,15 @@ const contractSchema = new mongoose.Schema({
       default: null,
     },
   },
+  reputationApplied: {
+    payment: {
+      type: Boolean,
+      default: false,
+    },
+    dispute: {
+      type: Boolean,
+      default: false,
+    },
+  },
 });
 module.exports = mongoose.model("Contract", contractSchema);

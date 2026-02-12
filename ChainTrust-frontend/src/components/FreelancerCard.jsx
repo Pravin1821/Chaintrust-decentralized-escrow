@@ -15,12 +15,18 @@ export default function FreelancerCard({
 }) {
   const [showFullBio, setShowFullBio] = useState(false);
 
+  const reputationScore =
+    (freelancer.reputation?.score ??
+      freelancer.reputationScore ??
+      Number(freelancer.reputation)) ||
+    0;
+
   // Calculate stats
   const stats = {
     completed: freelancer.completedContracts || 0,
     earnings: freelancer.totalEarnings || 0,
     disputes: freelancer.disputes || 0,
-    rating: freelancer.reputation || 0,
+    rating: reputationScore,
   };
 
   // Bio/description

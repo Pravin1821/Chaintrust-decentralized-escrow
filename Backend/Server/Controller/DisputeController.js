@@ -1,5 +1,6 @@
 const Dispute = require("../Model/Dispute");
 const Contract = require("../Model/Contract");
+const { updateReputation } = require("../utils/reputation");
 
 exports.raiseDispute = async (req, res) => {
   try {
@@ -70,21 +71,34 @@ exports.resolveDispute = async (req, res) => {
         .status(404)
         .json({ message: "Dispute not found or already resolved" });
     }
-    const contarct = await Contract.findById(dispute.contract);
-    if (!contarct) {
+    const contract = await Contract.findById(dispute.contract);
+    if (!contract) {
       return res.status(404).json({ message: "Associated contract not found" });
     }
+    const shouldApplyReputation = !contract.reputationApplied?.dispute;
+
     if (decision === "freelancerWins") {
-      contarct.status = "Paid";
-      contarct.paidAt = Date.now();
+      contract.status = "Paid";
+      contract.paidAt = Date.now();
+      if (shouldApplyReputation && contract.client) {
+        await updateReputation(contract.client, -10);
+      }
     } else {
-      contarct.status = "Resolved";
+      contract.status = "Resolved";
+      if (shouldApplyReputation && contract.freelancer) {
+        await updateReputation(contract.freelancer, -15);
+      }
     }
+
+    contract.reputationApplied = {
+      ...(contract.reputationApplied || {}),
+      dispute: true,
+    };
     dispute.status = "Resolved";
     dispute.resolution = decision;
     dispute.resolvedBy = req.user._id;
     dispute.resolvedAt = Date.now();
-    await contarct.save();
+    await contract.save();
     await dispute.save();
     res.status(200).json({ message: "Dispute resolved successfully", dispute });
   } catch (error) {

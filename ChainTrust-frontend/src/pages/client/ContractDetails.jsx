@@ -6,10 +6,12 @@ import ProfileModal from "../../components/ProfileModal.jsx";
 import PaymentModal from "../../components/PaymentModal.jsx";
 import EscrowVaultCard from "../../components/EscrowVaultCard.jsx";
 import api from "../../api/axios";
-import { clientContractService } from "../../services/api.js";
+import { clientContractService, reportService } from "../../services/api.js";
+import { useAuth } from "../../context/AuthContext";
 
 export default function ContractDetails() {
   const { id } = useParams();
+  const { user } = useAuth();
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -18,6 +20,11 @@ export default function ContractDetails() {
   const [showApplications, setShowApplications] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showPayModal, setShowPayModal] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState("");
+  const [reportError, setReportError] = useState(null);
+  const [reportSubmitting, setReportSubmitting] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -102,6 +109,31 @@ export default function ContractDetails() {
       alert(err.response?.data?.message || "Failed to approve work");
     } finally {
       setActionLoading(false);
+    }
+  };
+
+  const otherUserId =
+    item?.freelancer?._id || item?.freelancerId || item?.freelancer;
+  const canReport = Boolean(user?.role === "Client" && otherUserId && item);
+  const reportChars = reportReason.length;
+
+  const handleReportSubmit = async () => {
+    if (!canReport || reportChars < 20 || reportSubmitting || reportSubmitted)
+      return;
+    try {
+      setReportSubmitting(true);
+      setReportError(null);
+      await reportService.create({
+        contractId: id,
+        reportedUserId: otherUserId,
+        reason: reportReason,
+      });
+      setReportSubmitted(true);
+      alert("Report submitted");
+    } catch (err) {
+      setReportError(err?.response?.data?.message || "Failed to submit report");
+    } finally {
+      setReportSubmitting(false);
     }
   };
 
@@ -371,6 +403,36 @@ export default function ContractDetails() {
       <section className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl">
         <h2 className="text-base md:text-lg font-semibold mb-3">Actions</h2>
         {renderActionButtons()}
+        {canReport && (
+          <div className="mt-4 pt-3 border-t border-gray-800/80">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold text-gray-200">
+                Report freelancer
+              </span>
+              {reportSubmitted && (
+                <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
+                  Submitted
+                </span>
+              )}
+            </div>
+            <button
+              onClick={() => setShowReportModal(true)}
+              disabled={reportSubmitted}
+              className={`w-full px-4 py-2.5 rounded-lg text-sm font-medium transition-colors shadow-sm
+                ${
+                  reportSubmitted
+                    ? "bg-gray-800 text-gray-500 cursor-not-allowed"
+                    : "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200"
+                }`}
+            >
+              {reportSubmitted ? "Report submitted" : "Report this freelancer"}
+            </button>
+            <p className="text-xs text-gray-500 mt-2">
+              Use only for serious issues (fraud, harassment, breach). False
+              reports may affect your account.
+            </p>
+          </div>
+        )}
       </section>
 
       {/* Escrow Vault */}
@@ -441,6 +503,79 @@ export default function ContractDetails() {
           userId={selectedProfile}
           onClose={() => setSelectedProfile(null)}
         />
+      )}
+
+      {showReportModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowReportModal(false)}
+        >
+          <div
+            className="bg-gray-900/90 border border-gray-800 rounded-xl w-full max-w-lg p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">
+                Report freelancer
+              </h3>
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-sm text-gray-300">
+              Please share clear, factual details. Minimum 20 characters.
+            </p>
+            <div className="space-y-2">
+              <label className="block text-xs text-gray-400">Reason</label>
+              <textarea
+                className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white focus:border-red-400 focus:ring-1 focus:ring-red-400"
+                rows={4}
+                maxLength={500}
+                value={reportReason}
+                onChange={(e) => setReportReason(e.target.value)}
+                placeholder="Describe what happened, including any evidence or context."
+              />
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>Minimum 20 characters</span>
+                <span>{reportChars}/500</span>
+              </div>
+            </div>
+            {reportError && (
+              <div className="text-sm text-red-400 bg-red-900/30 border border-red-700/50 rounded-lg px-3 py-2">
+                {reportError}
+              </div>
+            )}
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                onClick={() => setShowReportModal(false)}
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReportSubmit}
+                disabled={
+                  reportSubmitting || reportSubmitted || reportChars < 20
+                }
+                className={`flex-1 px-4 py-2 rounded-lg font-semibold transition-colors
+                  ${
+                    reportSubmitting || reportSubmitted || reportChars < 20
+                      ? "bg-red-900/40 text-red-200 cursor-not-allowed"
+                      : "bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white"
+                  }`}
+              >
+                {reportSubmitting
+                  ? "Submitting..."
+                  : reportSubmitted
+                    ? "Submitted"
+                    : "Submit report"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {showEdit && (

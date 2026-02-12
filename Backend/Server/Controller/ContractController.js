@@ -1,5 +1,6 @@
 const Contract = require("../Model/Contract");
 const NotificationController = require("./NotificationController");
+const { updateReputation } = require("../utils/reputation");
 
 const isEditableStatus = (contract) => {
   const blockedStatuses = [
@@ -599,13 +600,28 @@ exports.approveWork = async (req, res) => {
         .status(400)
         .json({ message: "Only Submitted contracts can be approved" });
     }
+    const shouldApplyReputation = !existingContract.reputationApplied?.payment;
+
     existingContract.status = "Approved";
     existingContract.approvedAt = Date.now();
     existingContract.updatedAt = Date.now();
     // web3 hooks will go here later
     existingContract.status = "Paid";
     existingContract.paidAt = Date.now();
+    existingContract.reputationApplied = {
+      ...(existingContract.reputationApplied || {}),
+      payment: true,
+    };
     await existingContract.save();
+
+    if (shouldApplyReputation) {
+      if (existingContract.freelancer) {
+        await updateReputation(existingContract.freelancer, 10);
+      }
+      if (existingContract.client) {
+        await updateReputation(existingContract.client, 5);
+      }
+    }
 
     // Notify freelancer
     if (existingContract.freelancer) {

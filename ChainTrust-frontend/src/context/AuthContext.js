@@ -27,19 +27,7 @@ export const AuthProvider = ({ children }) => {
         });
         if (token) {
           const { data } = await api.get(mePath);
-          const normalizedUser = data.user || {
-            _id: data._id,
-            username: data.username,
-            email: data.email,
-            role: normalizeRole(data.role),
-            walletAddress: data.walletAddress,
-            isWalletVerified: data.isWalletVerified,
-            isActive: data.isActive,
-            createdAt: data.createdAt,
-            reputation: data.reputation,
-            permissions: data.permissions,
-            department: data.department,
-          };
+          const normalizedUser = data.user || formatUserFromPayload(data);
           localStorage.setItem("user", JSON.stringify(normalizedUser));
           setUser(normalizedUser);
         }
@@ -59,17 +47,7 @@ export const AuthProvider = ({ children }) => {
     const loginPath = normalizeAuthPath(rawLoginPath, "/auth/login");
     const { data } = await api.post(loginPath, payload);
     const token = data.token;
-    const normalizedUser = data.user || {
-      _id: data._id,
-      username: data.username,
-      email: data.email,
-      role: normalizeRole(data.role),
-      walletAddress: data.walletAddress,
-      isWalletVerified: data.isWalletVerified,
-      isActive: data.isActive,
-      createdAt: data.createdAt,
-      reputation: data.reputation,
-    };
+    const normalizedUser = data.user || formatUserFromPayload(data);
     if (token) localStorage.setItem("token", token);
     if (token) {
       console.log("[Auth] Login token:", token);
@@ -87,17 +65,7 @@ export const AuthProvider = ({ children }) => {
     const client = opts.useAltApi ? registerApi : api;
     const { data } = await client.post(endpoint, payload);
     const token = data.token;
-    const normalizedUser = data.user || {
-      _id: data._id,
-      username: data.username,
-      email: data.email,
-      role: normalizeRole(data.role),
-      walletAddress: data.walletAddress,
-      isWalletVerified: data.isWalletVerified,
-      isActive: data.isActive,
-      createdAt: data.createdAt,
-      reputation: data.reputation,
-    };
+    const normalizedUser = data.user || formatUserFromPayload(data);
     if (token) localStorage.setItem("token", token);
     // Debug: show token in console when registering
     if (token) {
@@ -125,6 +93,38 @@ export const AuthProvider = ({ children }) => {
 export const useAuth = () => {
   return useContext(AuthContext);
 };
+
+function normalizeReputation(raw) {
+  const score =
+    (raw?.reputation?.score ??
+      raw?.reputationScore ??
+      Number(raw?.reputation)) ||
+    0;
+  const level = raw?.reputation?.level || raw?.reputationLevel || "New";
+  return { score, level };
+}
+
+function formatUserFromPayload(data = {}) {
+  const { score, level } = normalizeReputation(data);
+  return {
+    _id: data._id,
+    username: data.username,
+    email: data.email,
+    role: normalizeRole(data.role),
+    walletAddress: data.walletAddress,
+    isWalletVerified: data.isWalletVerified,
+    isActive: data.isActive,
+    createdAt: data.createdAt,
+    reputation: { score, level },
+    reputationScore: score,
+    reputationLevel: level,
+    skills: data.skills || [],
+    bio: data.bio || "",
+    hourlyRate: data.hourlyRate ?? 0,
+    permissions: data.permissions,
+    department: data.department,
+  };
+}
 
 // Ensure overridden auth endpoints always include the /auth prefix
 function normalizeAuthPath(path, fallback) {

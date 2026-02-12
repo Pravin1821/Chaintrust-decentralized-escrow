@@ -1,6 +1,44 @@
 const user = require("../Model/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { calculateLevel } = require("../utils/reputation");
+
+const serializeUser = (userDoc, options = {}) => {
+  if (!userDoc) return null;
+  const plain = userDoc.toObject ? userDoc.toObject() : userDoc;
+  const score = Number(plain.reputation?.score ?? plain.reputation ?? 0) || 0;
+  const level = plain.reputation?.level || calculateLevel(score);
+
+  const base = {
+    _id: plain._id,
+    username: plain.username,
+    email: plain.email,
+    role: plain.role,
+    walletAddress: plain.walletAddress,
+    isWalletVerified: plain.isWalletVerified,
+    isActive: plain.isActive,
+    createdAt: plain.createdAt,
+    reputation: { score, level },
+    reputationScore: score,
+    reputationLevel: level,
+    phone: plain.phone,
+    phoneNumber: plain.phoneNumber,
+    isPhoneVerified: plain.isPhoneVerified,
+    reportsCount: plain.reportsCount,
+    isSuspended: plain.isSuspended,
+    skills: plain.skills || [],
+    bio: plain.bio || "",
+    hourlyRate: plain.hourlyRate ?? 0,
+    permissions: plain.permissions,
+    department: plain.department,
+  };
+
+  if (options.includeToken && options.token) {
+    base.token = options.token;
+  }
+
+  return base;
+};
 exports.register = async (req, res) => {
   try {
     let {
@@ -67,21 +105,7 @@ exports.register = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
-    res.status(201).json({
-      _id: newUser._id,
-      username: newUser.username,
-      email: newUser.email,
-      role: newUser.role,
-      walletAddress: newUser.walletAddress,
-      isWalletVerified: newUser.isWalletVerified,
-      isActive: newUser.isActive,
-      createdAt: newUser.createdAt,
-      reputation: newUser.reputation,
-      phone: newUser.phone,
-      phoneNumber: newUser.phoneNumber,
-      isPhoneVerified: newUser.isPhoneVerified,
-      token,
-    });
+    res.status(201).json(serializeUser(newUser, { includeToken: true, token }));
   } catch (error) {
     console.error("[AuthController] Register error:", error);
     if (error && error.code === 11000) {
@@ -112,21 +136,9 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
-    res.status(200).json({
-      _id: existingUser._id,
-      username: existingUser.username,
-      email: existingUser.email,
-      role: existingUser.role,
-      walletAddress: existingUser.walletAddress,
-      isWalletVerified: existingUser.isWalletVerified,
-      isActive: existingUser.isActive,
-      createdAt: existingUser.createdAt,
-      reputation: existingUser.reputation,
-      phone: existingUser.phone,
-      phoneNumber: existingUser.phoneNumber,
-      isPhoneVerified: existingUser.isPhoneVerified,
-      token,
-    });
+    res
+      .status(200)
+      .json(serializeUser(existingUser, { includeToken: true, token }));
   } catch (error) {
     console.error("[AuthController] Login error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -145,6 +157,11 @@ exports.update = async (req, res) => {
       payload.phone = req.body.phone.trim();
     if (typeof req.body.phoneNumber === "string")
       payload.phoneNumber = req.body.phoneNumber.trim();
+    if (typeof req.body.bio === "string") payload.bio = req.body.bio.trim();
+    if (req.body.hourlyRate !== undefined) {
+      const parsedRate = Number(req.body.hourlyRate);
+      if (!Number.isNaN(parsedRate)) payload.hourlyRate = parsedRate;
+    }
     if (Array.isArray(req.body.skills)) {
       payload.skills = req.body.skills
         .map((s) => (typeof s === "string" ? s.trim() : ""))
@@ -165,7 +182,7 @@ exports.update = async (req, res) => {
         runValidators: true,
       })
       .select("-password");
-    res.status(200).json(updatedUser);
+    res.status(200).json(serializeUser(updatedUser));
   } catch (error) {
     if (error && error.code === 11000) {
       return res.status(400).json({ message: "Email already exists" });
@@ -177,7 +194,7 @@ exports.update = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const currentUser = await user.findById(req.user._id).select("-password");
-    res.status(200).json(currentUser);
+    res.status(200).json(serializeUser(currentUser));
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
@@ -188,7 +205,7 @@ exports.me = async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ message: "Not authorized" });
     }
-    res.status(200).json(req.user);
+    res.status(200).json(serializeUser(req.user));
   } catch (error) {
     console.error("[AuthController] Me error:", error);
     res.status(500).json({ message: "Server error", error: error.message });
@@ -220,7 +237,7 @@ exports.getUserById = async (req, res) => {
       }
     }
 
-    const sanitized = targetUser.toObject();
+    const sanitized = serializeUser(targetUser);
     if (!canViewPhone && !isSelf) {
       delete sanitized.phone;
       delete sanitized.phoneNumber;

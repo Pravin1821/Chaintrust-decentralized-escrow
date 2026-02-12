@@ -279,8 +279,15 @@ exports.getFreelancerList = async (req, res) => {
           (c) => c.status === "Disputed",
         ).length;
 
+        const plain = freelancer.toObject();
+        const repScore = Number(plain.reputation?.score ?? plain.reputation) || 0;
+        const repLevel = plain.reputation?.level || "New";
+
         return {
-          ...freelancer.toObject(),
+          ...plain,
+          reputation: { score: repScore, level: repLevel },
+          reputationScore: repScore,
+          reputationLevel: repLevel,
           completedContracts,
           totalEarnings,
           disputes,

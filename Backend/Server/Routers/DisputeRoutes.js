@@ -8,6 +8,7 @@ const {
 } = require("../Controller/DisputeController");
 const { protect } = require("../Middleware/AuthMiddleware");
 const { authorizeRoles } = require("../Middleware/RoleMiddleware");
+const { updateReputation } = require("../utils/reputation");
 
 router.post(
   "/raiseDispute",
@@ -26,12 +27,9 @@ router.post(
       const { resolution } = req.body;
 
       if (!["freelancer", "client"].includes(resolution)) {
-        return res
-          .status(400)
-          .json({
-            message:
-              "Invalid resolution value. Must be 'freelancer' or 'client'",
-          });
+        return res.status(400).json({
+          message: "Invalid resolution value. Must be 'freelancer' or 'client'",
+        });
       }
 
       const Dispute = require("../Model/Dispute");
@@ -61,12 +59,24 @@ router.post(
       dispute.resolvedAt = Date.now();
 
       // Update contract based on resolution
+      const shouldApplyReputation = !contract.reputationApplied?.dispute;
       if (resolution === "freelancer") {
         contract.status = "Paid";
         contract.paidAt = Date.now();
+        if (shouldApplyReputation && contract.client) {
+          await updateReputation(contract.client, -10);
+        }
       } else {
         contract.status = "Resolved";
+        if (shouldApplyReputation && contract.freelancer) {
+          await updateReputation(contract.freelancer, -15);
+        }
       }
+
+      contract.reputationApplied = {
+        ...(contract.reputationApplied || {}),
+        dispute: true,
+      };
 
       await dispute.save();
       await contract.save();

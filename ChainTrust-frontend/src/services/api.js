@@ -93,3 +93,11 @@ export const notificationService = {
   markAllAsRead: () => api.patch("/notifications/read/all"),
   deleteNotification: (id) => api.delete(`/notifications/${id}`),
 };
+
+// Reports
+export const reportService = {
+  create: (payload) => api.post("/reports", payload),
+  list: (params) => api.get("/reports", { params }),
+  updateStatus: (id, status) => api.patch(`/reports/${id}/status`, { status }),
+  suspendUser: (id, userId) => api.post(`/reports/${id}/suspend`, { userId }),
+};

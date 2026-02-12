@@ -17,6 +17,9 @@ export default function ClientMarketplace() {
   const [selectedFreelancer, setSelectedFreelancer] = useState(null);
   const navigate = useNavigate();
 
+  const getRepScore = (f) =>
+    (f?.reputation?.score ?? f?.reputationScore ?? Number(f?.reputation)) || 0;
+
   useEffect(() => {
     fetchFreelancers();
   }, []);
@@ -151,7 +154,7 @@ export default function ClientMarketplace() {
         </div>
         <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-lg p-2.5 sm:p-3 border border-green-500/30">
           <div className="text-lg sm:text-2xl font-bold text-green-400">
-            {filteredFreelancers.filter((f) => (f.reputation || 0) >= 4).length}
+            {filteredFreelancers.filter((f) => getRepScore(f) >= 4).length}
           </div>
           <div className="text-[10px] sm:text-xs text-gray-400">
             Top Rated (4+)

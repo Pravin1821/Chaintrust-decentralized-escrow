@@ -32,8 +32,24 @@ const userSchema = new mongoose.Schema({
     default: true,
   },
   reputation: {
+    score: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+    level: {
+      type: String,
+      default: "New",
+    },
+  },
+  reportsCount: {
     type: Number,
     default: 0,
+    min: 0,
+  },
+  isSuspended: {
+    type: Boolean,
+    default: false,
   },
   skills: {
     type: [String],

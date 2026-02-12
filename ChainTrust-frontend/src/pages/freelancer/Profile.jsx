@@ -38,6 +38,15 @@ export default function FreelancerProfile() {
   const [skills, setSkills] = useState("");
   const [skillsMessage, setSkillsMessage] = useState(null);
 
+  const reputationScore = useMemo(() => {
+    return (
+      (user?.reputation?.score ?? user?.reputationScore ?? Number(user?.reputation)) || 0
+    );
+  }, [user]);
+  const reputationLevel = useMemo(() => {
+    return user?.reputation?.level || user?.reputationLevel || "New";
+  }, [user]);
+
   useEffect(() => {
     (async () => {
       try {
@@ -230,6 +239,12 @@ export default function FreelancerProfile() {
                     className={`px-2 py-0.5 text-[10px] sm:text-xs rounded-full border whitespace-nowrap ${user.isActive ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/30" : "bg-red-500/20 text-red-300 border-red-500/30"}`}
                   >
                     {user.isActive ? "Active" : "Suspended"}
+                  </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] sm:text-xs rounded-full bg-amber-500/15 text-amber-100 border border-amber-400/30 whitespace-nowrap">
+                    ⭐ {reputationScore.toFixed(1)}
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] sm:text-xs rounded-full bg-gray-800/60 text-cyan-200 border border-gray-700/60 whitespace-nowrap">
+                    {reputationLevel}
                   </span>
                 </div>
                 <p className="text-[10px] sm:text-xs text-gray-400 mt-1">

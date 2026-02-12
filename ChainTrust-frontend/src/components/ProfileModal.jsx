@@ -13,6 +13,10 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
   const [error, setError] = useState(null);
   const isFreelancer = profile?.role?.toLowerCase() === "freelancer";
   const skills = Array.isArray(profile?.skills) ? profile.skills : [];
+  const reputationScore =
+    profile?.reputation?.score ?? profile?.reputationScore ?? 0;
+  const reputationLevel =
+    profile?.reputation?.level ?? profile?.reputationLevel ?? "New";
 
   useEffect(() => {
     if (userId) {
@@ -127,22 +131,26 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                           : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                       }`}
                     >
-                      {isFreelancer ? "🎯" : "👤"}{" "}
-                      {profile.role?.toUpperCase()}
+                      {isFreelancer ? "🎯" : "👤"} {profile.role?.toUpperCase()}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
-                    <span>⭐ Reputation: {profile.reputation || 0}</span>
+                  <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-400">
+                    <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/30">
+                      ⭐ <span className="font-semibold text-white">{reputationScore}</span>
+                    </span>
+                    <span className="px-2 py-1 bg-gray-800/60 border border-gray-700/50 rounded-full text-xs text-cyan-200">
+                      {reputationLevel}
+                    </span>
                   </div>
-                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-300">
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-500">Email:</span>
-                      <span className="truncate">{profile.email || "—"}</span>
+                  <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-300">
+                    <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+                      <p className="text-xs text-gray-500">Email</p>
+                      <p className="truncate font-medium text-white">{profile.email || "—"}</p>
                     </div>
                     {profile.phoneNumber && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-gray-500">Phone:</span>
-                        <span className="truncate">{profile.phoneNumber}</span>
+                      <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
+                        <p className="text-xs text-gray-500">Phone</p>
+                        <p className="truncate font-medium text-white">{profile.phoneNumber}</p>
                       </div>
                     )}
                   </div>
@@ -217,7 +225,8 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                     </div>
                   ) : (
                     <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50 text-sm text-gray-400">
-                      No contracts yet. Invite this freelancer to kick off their first project.
+                      No contracts yet. Invite this freelancer to kick off their
+                      first project.
                     </div>
                   )}
                 </div>
@@ -249,36 +258,25 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                 </div>
               )}
 
-              {/* Additional Info */}
-              <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-gray-400">Email:</span>
-                    <span className="ml-2 text-white">{profile.email}</span>
+              {/* Account Details */}
+              <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50 grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
+                <div className="p-3 rounded-lg bg-gray-900/40 border border-gray-700/50">
+                  <p className="text-xs text-gray-500">Member since</p>
+                  <p className="text-white font-medium">
+                    {new Date(profile.createdAt).toLocaleDateString()}
+                  </p>
+                </div>
+                {profile.walletAddress && (
+                  <div className="p-3 rounded-lg bg-gray-900/40 border border-gray-700/50">
+                    <p className="text-xs text-gray-500">Wallet</p>
+                    <p className="text-white font-mono text-xs truncate">
+                      {profile.walletAddress}
+                    </p>
                   </div>
-                  {profile.phoneNumber && (
-                    <div>
-                      <span className="text-gray-400">Phone:</span>
-                      <span className="ml-2 text-white">
-                        {profile.phoneNumber}
-                      </span>
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-gray-400">Member since:</span>
-                    <span className="ml-2 text-white">
-                      {new Date(profile.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {profile.walletAddress && (
-                    <div className="col-span-full">
-                      <span className="text-gray-400">Wallet:</span>
-                      <span className="ml-2 text-white font-mono text-xs">
-                        {profile.walletAddress.slice(0, 6)}...
-                        {profile.walletAddress.slice(-4)}
-                      </span>
-                    </div>
-                  )}
+                )}
+                <div className="p-3 rounded-lg bg-gray-900/40 border border-gray-700/50">
+                  <p className="text-xs text-gray-500">Role</p>
+                  <p className="text-white font-medium">{profile.role}</p>
                 </div>
               </div>
             </div>
