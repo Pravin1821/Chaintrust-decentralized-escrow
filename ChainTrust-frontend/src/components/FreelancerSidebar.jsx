@@ -40,6 +40,10 @@ export default function FreelancerSidebar() {
           <span>🛒</span>
           <span>Marketplace</span>
         </NavLink>
+        <NavLink to="/freelancer/invitations" className={linkClass}>
+          <span>📩</span>
+          <span>Invitations</span>
+        </NavLink>
         <NavLink to="/freelancer/contracts" className={linkClass}>
           <span>📄</span>
           <span>My Contracts</span>

@@ -51,6 +51,20 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
+  phone: {
+    type: String,
+    default: null,
+    trim: true,
+  },
+  phoneNumber: {
+    type: String,
+    default: null,
+    trim: true,
+  },
+  isPhoneVerified: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

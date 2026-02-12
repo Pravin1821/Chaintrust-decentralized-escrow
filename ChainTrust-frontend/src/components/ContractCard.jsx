@@ -67,8 +67,58 @@ export default function ContractCard({
     ? freelancer.name || freelancer.username || "Unnamed"
     : null;
   const freelancerEmail = freelancerAssigned ? freelancer.email : null;
+  const timelineSteps = [
+    { label: "Created", active: true },
+    {
+      label: "Assigned",
+      active: [
+        "Assigned",
+        "Funded",
+        "Submitted",
+        "Approved",
+        "Paid",
+        "Disputed",
+        "Resolved",
+      ].includes(contract.status),
+    },
+    {
+      label: "Funded",
+      active: [
+        "Funded",
+        "Submitted",
+        "Approved",
+        "Paid",
+        "Disputed",
+        "Resolved",
+      ].includes(contract.status),
+    },
+    {
+      label: "Submitted",
+      active: [
+        "Submitted",
+        "Approved",
+        "Paid",
+        "Disputed",
+        "Resolved",
+      ].includes(contract.status),
+    },
+    {
+      label: "Approved",
+      active: ["Approved", "Paid", "Disputed", "Resolved"].includes(
+        contract.status,
+      ),
+    },
+    { label: "Paid", active: ["Paid"].includes(contract.status) },
+    { label: "Disputed", active: contract.status === "Disputed" },
+  ];
+
   return (
-    <div className="p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl backdrop-blur-sm">
+    <div
+      className={`p-3 md:p-4 bg-gray-900/60 border border-gray-800/60 rounded-xl backdrop-blur-sm ${onView ? "cursor-pointer hover:border-cyan-500/50" : ""}`}
+      onClick={() => onView && onView(contract)}
+      role={onView ? "button" : undefined}
+      tabIndex={onView ? 0 : undefined}
+    >
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
         <div className="flex-1 min-w-0">
           <h3 className="text-base md:text-lg font-semibold text-white truncate">
@@ -112,7 +162,10 @@ export default function ContractCard({
         {hasAssignPermission && (
           <button
             className="px-3 py-1.5 text-xs rounded-lg bg-blue-600/80 hover:bg-blue-500"
-            onClick={() => onAssign(contract)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onAssign(contract);
+            }}
           >
             Assign
           </button>
@@ -120,7 +173,10 @@ export default function ContractCard({
         {hasFundPermission && (
           <button
             className="px-3 py-1.5 text-xs rounded-lg bg-cyan-600/80 hover:bg-cyan-500"
-            onClick={() => onFund(contract)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onFund(contract);
+            }}
           >
             Fund
           </button>
@@ -128,7 +184,10 @@ export default function ContractCard({
         {hasApprovePermission && (
           <button
             className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600/80 hover:bg-emerald-500"
-            onClick={() => onApprove(contract)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onApprove(contract);
+            }}
           >
             Approve
           </button>
@@ -136,7 +195,10 @@ export default function ContractCard({
         {onDispute && (
           <button
             className="px-3 py-1.5 text-xs rounded-lg bg-red-600/80 hover:bg-red-500"
-            onClick={() => onDispute(contract)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDispute(contract);
+            }}
           >
             Dispute
           </button>
@@ -144,11 +206,29 @@ export default function ContractCard({
         {onView && (
           <button
             className="px-3 py-1.5 text-xs rounded-lg bg-gray-700/80 hover:bg-gray-600"
-            onClick={() => onView(contract)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onView(contract);
+            }}
           >
-            View Details
+            Status
           </button>
         )}
+      </div>
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-[11px] text-gray-400">
+        {timelineSteps.map((step, idx) => (
+          <div key={step.label} className="flex items-center gap-1">
+            <span
+              className={`h-2 w-2 rounded-full ${step.active ? "bg-cyan-400" : "bg-gray-600"}`}
+            />
+            <span className={step.active ? "text-cyan-200" : "text-gray-500"}>
+              {step.label}
+            </span>
+            {idx < timelineSteps.length - 1 && (
+              <span className="mx-1 text-gray-600">·</span>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

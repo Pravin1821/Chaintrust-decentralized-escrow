@@ -12,6 +12,13 @@ router.post(
   authorizeRoles("Client"),
   contractController.createContract,
 );
+// alias to support POST /api/contracts
+router.post(
+  "/",
+  protect,
+  authorizeRoles("Client"),
+  contractController.createContract,
+);
 router.get(
   "/getContracts",
   protect,
@@ -63,11 +70,47 @@ router.post(
   contractController.assignFreelancer,
 );
 router.post(
+  "/:id/respond-invite",
+  protect,
+  authorizeRoles("Freelancer"),
+  contractController.respondInvite,
+);
+router.get(
+  "/invited",
+  protect,
+  authorizeRoles("Freelancer"),
+  contractController.getInvitedContracts,
+);
+router.patch(
+  "/update/:id",
+  protect,
+  authorizeRoles("Client"),
+  contractController.updateContract,
+);
+router.delete(
+  "/delete/:id",
+  protect,
+  authorizeRoles("Client"),
+  contractController.deleteContract,
+);
+router.post(
   "/fundContract/:id",
   protect,
   authorizeRoles("Client"),
   enforceContractState("Assigned"),
   contractController.fundContract,
+);
+router.post(
+  "/:id/request-revision",
+  protect,
+  authorizeRoles("Freelancer"),
+  contractController.requestRevision,
+);
+router.post(
+  "/:id/respond-revision",
+  protect,
+  authorizeRoles("Client"),
+  contractController.respondRevision,
 );
 router.post(
   "/approveWork/:id",
@@ -99,11 +142,9 @@ router.patch(
       const { action } = req.body;
 
       if (!["flag", "hide", "restore"].includes(action)) {
-        return res
-          .status(400)
-          .json({
-            message: "Invalid action. Must be 'flag', 'hide', or 'restore'",
-          });
+        return res.status(400).json({
+          message: "Invalid action. Must be 'flag', 'hide', or 'restore'",
+        });
       }
 
       const Contract = require("../Model/Contract");

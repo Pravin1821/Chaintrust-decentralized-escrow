@@ -18,6 +18,7 @@ import FreelancerMyContracts from "./pages/freelancer/MyContracts.jsx";
 import FreelancerContractDetails from "./pages/freelancer/ContractDetails.jsx";
 import FreelancerEarnings from "./pages/freelancer/Earnings.jsx";
 import FreelancerMarketplace from "./pages/freelancer/Marketplace.jsx";
+import FreelancerInvitations from "./pages/freelancer/Invitations.jsx";
 import AdminLayout from "./layouts/AdminLayout.jsx";
 import AdminDashboard from "./pages/admin/AdminDashboard.jsx";
 import AdminDisputes from "./pages/admin/AdminDisputes.jsx";
@@ -75,6 +76,10 @@ function App() {
           <Route
             path="/freelancer/marketplace"
             element={<FreelancerMarketplace />}
+          />
+          <Route
+            path="/freelancer/invitations"
+            element={<FreelancerInvitations />}
           />
           <Route
             path="/freelancer/contracts"

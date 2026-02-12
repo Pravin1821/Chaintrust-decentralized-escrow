@@ -23,6 +23,7 @@ export default function FreelancerProfile() {
     username: "",
     email: "",
     walletAddress: "",
+    phoneNumber: "",
   });
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -47,6 +48,7 @@ export default function FreelancerProfile() {
           username: u.username || "",
           email: u.email || "",
           walletAddress: u.walletAddress || "",
+          phoneNumber: u.phoneNumber || "",
         });
 
         // UI-only skills stored in localStorage
@@ -122,6 +124,7 @@ export default function FreelancerProfile() {
         username: form.username,
         email: form.email,
         walletAddress: form.walletAddress,
+        phoneNumber: form.phoneNumber,
       };
       if (newPassword || confirmPassword) {
         if (newPassword !== confirmPassword) {
@@ -229,6 +232,12 @@ export default function FreelancerProfile() {
                   Email:{" "}
                   <span className="text-gray-300">{user.email || "—"}</span>
                 </p>
+                {user.phoneNumber && (
+                  <p className="text-[10px] sm:text-xs text-gray-400 truncate">
+                    Phone:{" "}
+                    <span className="text-gray-300">{user.phoneNumber}</span>
+                  </p>
+                )}
                 <p className="text-[10px] sm:text-xs text-gray-400 truncate">
                   Wallet:{" "}
                   <span className="text-gray-300">
@@ -329,6 +338,11 @@ export default function FreelancerProfile() {
                 label="Email"
                 value={form.email}
                 onChange={(v) => setForm({ ...form, email: v })}
+              />
+              <Field
+                label="Phone (private)"
+                value={form.phoneNumber}
+                onChange={(v) => setForm({ ...form, phoneNumber: v })}
               />
               <Field
                 label="Wallet Address"

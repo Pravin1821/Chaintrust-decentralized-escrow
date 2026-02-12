@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 // Layout is provided by routes; do not wrap here
 import Loader from "../../components/Loader.jsx";
+import api from "../../api/axios";
 import {
   authService,
   updateProfile,
   clientContractService,
+  freelancerService,
 } from "../../services/api.js";
 import {
   connectWallet,
@@ -24,6 +26,7 @@ export default function Profile() {
     username: "",
     email: "",
     walletAddress: "",
+    phoneNumber: "",
   });
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,7 +40,8 @@ export default function Profile() {
   });
   const [skills, setSkills] = useState("");
   const [skillsMessage, setSkillsMessage] = useState(null);
-  const isFreelancer = authUser?.role === "Freelancer";
+  const normalizedAuthRole = (authUser?.role || "").toLowerCase();
+  const isFreelancer = normalizedAuthRole === "freelancer";
 
   useEffect(() => {
     (async () => {
@@ -45,10 +49,13 @@ export default function Profile() {
         const { data } = await authService.me();
         const u = data?.user || data;
         setUser(u);
+        const userRole = (u.role || "").toLowerCase();
+
         setForm({
           username: u.username || "",
           email: u.email || "",
           walletAddress: u.walletAddress || "",
+          phoneNumber: u.phoneNumber || "",
         });
 
         // UI-only skills stored in localStorage for freelancers
@@ -56,18 +63,37 @@ export default function Profile() {
           const storedSkills = localStorage.getItem(`skills_${u._id}`);
           if (storedSkills) {
             setSkills(storedSkills);
-          } else if (u.role === "Freelancer") {
+          } else if (userRole === "freelancer") {
             setSkills("React, Node.js, MongoDB, Web3");
           }
         } catch {}
 
         // Load activity stats based on role
-        if (u.role === "Client") {
-          const { data: contractsData } =
-            await clientContractService.getContracts();
-          const list = Array.isArray(contractsData)
+        const normalizeList = (contractsData) => {
+          return Array.isArray(contractsData)
             ? contractsData
-            : contractsData?.contracts || [];
+            : contractsData?.contracts || contractsData || [];
+        };
+
+        const calcAmount = (c) =>
+          Number(c?.amount ?? c?.escrowAmount ?? 0) || 0;
+
+        if (userRole === "client") {
+          let list = [];
+          try {
+            const { data } = await clientContractService.getContracts();
+            list = normalizeList(data);
+          } catch {
+            try {
+              const { data } = await api.get("/contracts");
+              list = normalizeList(data);
+            } catch (err) {
+              console.error("Failed to load client contracts for stats", err);
+              setStats({ total: 0, active: 0, completed: 0, totalSpent: 0 });
+              throw err;
+            }
+          }
+
           const total = list.length;
           const active = list.filter((c) =>
             [
@@ -81,11 +107,33 @@ export default function Profile() {
           const completed = list.filter((c) => c.status === "Paid").length;
           const totalSpent = list
             .filter((c) => c.status === "Paid")
-            .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+            .reduce((sum, c) => sum + calcAmount(c), 0);
           setStats({ total, active, completed, totalSpent });
-        } else if (u.role === "Freelancer") {
-          const { data } = await freelancerService.myContracts();
-          const list = Array.isArray(data) ? data : data?.contracts || [];
+        } else if (userRole === "freelancer") {
+          let list = [];
+          try {
+            const { data } = await freelancerService.myContracts();
+            list = normalizeList(data);
+          } catch {
+            try {
+              const { data } = await api.get("/contracts");
+              list = normalizeList(data);
+            } catch (err) {
+              console.error(
+                "Failed to load freelancer contracts for stats",
+                err,
+              );
+              setStats({
+                total: 0,
+                active: 0,
+                completed: 0,
+                totalEarned: 0,
+                disputes: 0,
+              });
+              throw err;
+            }
+          }
+
           const total = list.length;
           const active = list.filter((c) =>
             [
@@ -99,7 +147,7 @@ export default function Profile() {
           const completed = list.filter((c) => c.status === "Paid").length;
           const totalEarned = list
             .filter((c) => c.status === "Paid")
-            .reduce((sum, c) => sum + (Number(c.amount) || 0), 0);
+            .reduce((sum, c) => sum + calcAmount(c), 0);
           const disputes = list.filter((c) => c.status === "Disputed").length;
           setStats({ total, active, completed, totalEarned, disputes });
         }
@@ -136,6 +184,7 @@ export default function Profile() {
         username: form.username,
         email: form.email,
         walletAddress: form.walletAddress,
+        phoneNumber: form.phoneNumber,
       };
       if (newPassword || confirmPassword) {
         if (newPassword !== confirmPassword) {
@@ -243,6 +292,12 @@ export default function Profile() {
                   Email:{" "}
                   <span className="text-gray-300">{user.email || "—"}</span>
                 </p>
+                {user.phoneNumber && (
+                  <p className="text-xs text-gray-400 truncate">
+                    Phone:{" "}
+                    <span className="text-gray-300">{user.phoneNumber}</span>
+                  </p>
+                )}
                 <p className="text-xs text-gray-400 truncate">
                   Wallet:{" "}
                   <span className="text-gray-300">
@@ -316,7 +371,9 @@ export default function Profile() {
                     ? "Completed Contracts"
                     : "Total Contracts Created"
                 }
-                value={stats?.completed ?? stats?.total ?? 0}
+                value={
+                  isFreelancer ? (stats?.completed ?? 0) : (stats?.total ?? 0)
+                }
                 icon={isFreelancer ? "✅" : "📦"}
               />
               <StatCard
@@ -367,6 +424,11 @@ export default function Profile() {
                 label="Email"
                 value={form.email}
                 onChange={(v) => setForm({ ...form, email: v })}
+              />
+              <Field
+                label="Phone (private)"
+                value={form.phoneNumber}
+                onChange={(v) => setForm({ ...form, phoneNumber: v })}
               />
               <Field
                 label="Wallet Address"

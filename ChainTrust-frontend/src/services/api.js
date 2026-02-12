@@ -9,13 +9,18 @@ export const authService = {
 
 // Client Contracts
 export const clientContractService = {
-  createContract: (payload) => api.post("/contracts/createContract", payload),
+  createContract: (payload) => api.post("/contracts", payload),
   getContracts: () => api.get("/contracts/getContracts"),
   assignFreelancer: (id, payload) =>
     api.post(`/contracts/assignFreelancer/${id}`, payload),
   fundContract: (id, payload) =>
     api.post(`/contracts/fundContract/${id}`, payload),
   approveWork: (id) => api.post(`/contracts/approveWork/${id}`),
+  updateContract: (id, payload) =>
+    api.patch(`/contracts/update/${id}`, payload),
+  deleteContract: (id) => api.delete(`/contracts/delete/${id}`),
+  respondRevision: (id, payload) =>
+    api.post(`/contracts/${id}/respond-revision`, payload),
 };
 
 // Freelancer
@@ -25,6 +30,11 @@ export const freelancerService = {
   getMarketplace: () => api.get("/contracts/marketpalce"), // Note: backend has typo "marketpalce"
   apply: (id, payload) => api.post(`/freelancer/apply/${id}`, payload),
   submitWork: (id, payload) => api.post(`/freelancer/submitWork`, payload),
+  getInvitations: () => api.get("/contracts/invited"),
+  respondInvite: (id, payload) =>
+    api.post(`/contracts/${id}/respond-invite`, payload),
+  requestRevision: (id, payload) =>
+    api.post(`/contracts/${id}/request-revision`, payload),
 };
 
 // Disputes
@@ -73,4 +83,13 @@ export const adminService = {
       api.get("/contracts?admin=true"),
       api.get("/disputes"),
     ]),
+};
+
+// Notification Services
+export const notificationService = {
+  getNotifications: (params) => api.get("/notifications", { params }),
+  getUnreadCount: () => api.get("/notifications/unread/count"),
+  markAsRead: (id) => api.patch(`/notifications/${id}/read`),
+  markAllAsRead: () => api.patch("/notifications/read/all"),
+  deleteNotification: (id) => api.delete(`/notifications/${id}`),
 };

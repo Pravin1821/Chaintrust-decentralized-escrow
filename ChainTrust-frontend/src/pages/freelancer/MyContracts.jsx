@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import Loader from "../../components/Loader.jsx";
 import StatusBadge from "../../components/StatusBadge.jsx";
 import EscrowBadge from "../../components/EscrowBadge.jsx";
+import ActivityTimeline from "../../components/ActivityTimeline.jsx";
 import { freelancerService } from "../../services/api.js";
 import { useNavigate } from "react-router-dom";
+import { LuEye } from "react-icons/lu";
 
 function formatAmount(amount, paymentType, currency) {
   const n = Number(amount) || 0;
@@ -19,6 +21,7 @@ export default function MyContracts() {
   const [items, setItems] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [viewActivityContract, setViewActivityContract] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -87,6 +90,13 @@ export default function MyContracts() {
               </div>
             </div>
             <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row flex-wrap gap-2">
+              <button
+                className="w-full sm:w-auto px-3 py-2 text-xs rounded-lg bg-gray-700/80 hover:bg-gray-600 flex items-center justify-center gap-2"
+                onClick={() => setViewActivityContract(c)}
+              >
+                <LuEye size={14} />
+                View Activity
+              </button>
               {canSubmit(c) && (
                 <button
                   className="w-full sm:w-auto px-3 py-2 text-xs rounded-lg bg-emerald-600/80 hover:bg-emerald-500"
@@ -105,7 +115,7 @@ export default function MyContracts() {
               )}
               {canViewSubmission(c) && (
                 <button
-                  className="w-full sm:w-auto px-3 py-2 text-xs rounded-lg bg-gray-700/80 hover:bg-gray-600"
+                  className="w-full sm:w-auto px-3 py-2 text-xs rounded-lg bg-cyan-600/80 hover:bg-cyan-500"
                   onClick={() => onSubmitWork(c)}
                 >
                   View Submission
@@ -113,13 +123,84 @@ export default function MyContracts() {
               )}
               {!canSubmit(c) && !canResubmit(c) && !canViewSubmission(c) && (
                 <span className="text-center sm:text-left w-full sm:w-auto text-xs text-gray-500">
-                  No actions available
+                  {c.status === "Assigned"
+                    ? "Awaiting funding"
+                    : "No actions available"}
                 </span>
               )}
             </div>
           </div>
         ))}
       </div>
+
+      {/* Activity Timeline Modal */}
+      {viewActivityContract && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setViewActivityContract(null)}
+        >
+          <div
+            className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl border border-gray-700 w-full max-w-2xl max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-gray-900/90 backdrop-blur-sm border-b border-gray-700 p-4 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-white">
+                  {viewActivityContract.title}
+                </h3>
+                <p className="text-sm text-gray-400 mt-1">
+                  Contract Activity & Status
+                </p>
+              </div>
+              <button
+                onClick={() => setViewActivityContract(null)}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+              >
+                Close
+              </button>
+            </div>
+            <div className="p-4 space-y-4">
+              <div className="bg-gray-900/60 border border-gray-800/60 rounded-xl p-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-400">Amount</p>
+                    <p className="text-white font-medium">
+                      {formatAmount(
+                        viewActivityContract.amount,
+                        viewActivityContract.paymentType,
+                        viewActivityContract.currency,
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Deadline</p>
+                    <p className="text-white font-medium">
+                      {new Date(
+                        viewActivityContract.deadline,
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Client</p>
+                    <p className="text-white font-medium">
+                      {viewActivityContract.client?.username ||
+                        viewActivityContract.client?.name ||
+                        "Unknown"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-400">Status</p>
+                    <p className="text-white font-medium">
+                      {viewActivityContract.status}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <ActivityTimeline contract={viewActivityContract} />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

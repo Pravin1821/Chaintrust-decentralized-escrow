@@ -43,6 +43,7 @@ const contractSchema = new mongoose.Schema({
     type: String,
     enum: [
       "Created",
+      "Invited",
       "Applied",
       "Assigned",
       "Funded",
@@ -94,6 +95,42 @@ const contractSchema = new mongoose.Schema({
     type: Date,
     default: null,
   },
+  invitation: {
+    invitedFreelancer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Accepted", "Declined"],
+      default: null,
+    },
+    declineReason: {
+      type: String,
+      default: null,
+    },
+    respondedAt: {
+      type: Date,
+      default: null,
+    },
+  },
+  isPublic: {
+    type: Boolean,
+    default: true,
+  },
+  acceptedAt: {
+    type: Date,
+    default: null,
+  },
+  declinedAt: {
+    type: Date,
+    default: null,
+  },
+  declineReason: {
+    type: String,
+    default: null,
+  },
   dispute: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Dispute",
@@ -106,6 +143,29 @@ const contractSchema = new mongoose.Schema({
   isHidden: {
     type: Boolean,
     default: false,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  revisionRequest: {
+    proposedAmount: {
+      type: Number,
+      default: null,
+    },
+    proposedRequirements: {
+      type: String,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["Pending", "Approved", "Rejected", null],
+      default: null,
+    },
+    requestedAt: {
+      type: Date,
+      default: null,
+    },
   },
 });
 module.exports = mongoose.model("Contract", contractSchema);

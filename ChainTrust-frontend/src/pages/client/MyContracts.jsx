@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ContractCard from "../../components/ContractCard.jsx";
 import Loader from "../../components/Loader.jsx";
@@ -11,6 +11,7 @@ export default function MyContracts() {
   const [selectedContract, setSelectedContract] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const navigate = useNavigate();
+  const hasFetchedRef = useRef(false);
 
   const fetchContracts = async () => {
     try {
@@ -27,6 +28,8 @@ export default function MyContracts() {
   };
 
   useEffect(() => {
+    if (hasFetchedRef.current) return; // avoid double fetch in React StrictMode
+    hasFetchedRef.current = true;
     fetchContracts();
   }, []);
 
@@ -101,8 +104,8 @@ export default function MyContracts() {
   };
 
   const onView = (item) => {
-    const id = item.id || item._id;
-    navigate(`/client/contracts/${id}`);
+    const targetId = item._id || item.id;
+    if (targetId) navigate(`/client/contracts/${targetId}`);
   };
 
   if (loading) return <Loader label="Loading contracts..." />;

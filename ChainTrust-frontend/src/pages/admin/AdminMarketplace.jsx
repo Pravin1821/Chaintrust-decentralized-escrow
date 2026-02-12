@@ -294,7 +294,7 @@ export default function AdminMarketplace() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-emerald-300 font-semibold">
-                      ${c.escrowAmount?.toLocaleString() || 0}
+                      ₹{c.escrowAmount?.toLocaleString() || 0}
                     </td>
                     <td className="px-4 py-3">
                       {c.applicationsCount ?? c.applications?.length ?? 0}
@@ -344,7 +344,7 @@ export default function AdminMarketplace() {
                       {c.clientId?.username || "Unknown"}
                     </p>
                     <p className="text-xs text-gray-500">
-                      ${c.escrowAmount?.toLocaleString() || 0} •{" "}
+                      ₹{c.escrowAmount?.toLocaleString() || 0} •{" "}
                       {c.applicationsCount ?? c.applications?.length ?? 0}{" "}
                       applications
                     </p>
@@ -391,7 +391,7 @@ export default function AdminMarketplace() {
                 Client: {selected.clientId?.username || "Unknown"}
               </p>
               <p className="text-xs text-gray-500">
-                Budget: ${selected.escrowAmount?.toLocaleString() || 0}
+                Budget: ₹{selected.escrowAmount?.toLocaleString() || 0}
               </p>
             </div>
 

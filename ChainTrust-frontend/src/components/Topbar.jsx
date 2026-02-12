@@ -7,6 +7,7 @@ import {
   getBalance,
 } from "../services/web3";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 export default function Topbar() {
   const { user, logout } = useAuth();
@@ -108,6 +109,7 @@ export default function Topbar() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 flex-shrink-0">
+          <NotificationBell />
           <button
             onClick={() => {
               const profilePath =

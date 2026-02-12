@@ -13,6 +13,14 @@ export default function ContractDetails() {
   const [actionLoading, setActionLoading] = useState(false);
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showApplications, setShowApplications] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
+  const [editForm, setEditForm] = useState({
+    title: "",
+    description: "",
+    amount: "",
+    currency: "INR",
+    deadline: "",
+  });
 
   useEffect(() => {
     fetchContract();
@@ -26,6 +34,13 @@ export default function ContractDetails() {
       const found = list.find((c) => (c._id || c.id) === id);
       if (!found) throw new Error("Not found");
       setItem(found);
+      setEditForm({
+        title: found.title || "",
+        description: found.description || "",
+        amount: found.amount || "",
+        currency: found.currency || "INR",
+        deadline: found.deadline ? found.deadline.slice(0, 10) : "",
+      });
       setError(null);
     } catch (e) {
       setError("Failed to fetch contract from server");
@@ -74,12 +89,49 @@ export default function ContractDetails() {
     }
   };
 
+  const handleUpdateContract = async () => {
+    const payload = {
+      title: editForm.title,
+      description: editForm.description,
+      amount: Number(editForm.amount) || 0,
+      currency: editForm.currency,
+      deadline: editForm.deadline,
+    };
+    try {
+      setActionLoading(true);
+      await clientContractService.updateContract(id, payload);
+      await fetchContract();
+      alert("Contract updated");
+      setShowEdit(false);
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to update contract");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteContract = async () => {
+    if (!confirm("Delete this contract? This cannot be undone.")) return;
+    try {
+      setActionLoading(true);
+      await clientContractService.deleteContract(id);
+      alert("Contract deleted");
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete contract");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) return <Loader label="Loading contract..." />;
 
   // State-based action buttons rendering
   const renderActionButtons = () => {
     const status = item.status;
     const escrowStatus = item.escrowStatus;
+    const canEdit = ["Created", "Invited", "Assigned"].includes(status);
+    const isFunded = escrowStatus === "Funded";
+    const canDelete = ["Created", "Invited"].includes(status);
 
     switch (status) {
       case "Created":
@@ -94,6 +146,21 @@ export default function ContractDetails() {
             <p className="text-xs text-gray-400 text-center">
               Review and assign a freelancer from applications
             </p>
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <button
+                onClick={() => setShowEdit(true)}
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+              >
+                ✏️ Edit
+              </button>
+              <button
+                onClick={handleDeleteContract}
+                disabled={actionLoading}
+                className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? "Deleting..." : "🗑️ Delete"}
+              </button>
+            </div>
           </div>
         );
 
@@ -111,6 +178,22 @@ export default function ContractDetails() {
               <p className="text-xs text-gray-400 text-center">
                 Fund the contract to allow work to begin
               </p>
+              <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                <button
+                  onClick={() => setShowEdit(true)}
+                  disabled={isFunded || !canEdit}
+                  className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                >
+                  ✏️ Edit
+                </button>
+                <button
+                  onClick={handleDeleteContract}
+                  disabled={!canDelete || actionLoading}
+                  className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+                >
+                  {actionLoading ? "Deleting..." : "🗑️ Delete"}
+                </button>
+              </div>
             </div>
           );
         }
@@ -165,7 +248,27 @@ export default function ContractDetails() {
         );
 
       default:
-        return null;
+        return (
+          <div className="space-y-2">
+            {canEdit && !isFunded && (
+              <button
+                onClick={() => setShowEdit(true)}
+                className="w-full px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+              >
+                ✏️ Edit
+              </button>
+            )}
+            {canDelete && (
+              <button
+                onClick={handleDeleteContract}
+                disabled={actionLoading}
+                className="w-full px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? "Deleting..." : "🗑️ Delete"}
+              </button>
+            )}
+          </div>
+        );
     }
   };
 
@@ -198,6 +301,11 @@ export default function ContractDetails() {
         <InfoCard
           title="Freelancer"
           value={getFreelancerDisplay(item.freelancer)}
+          onClick={() =>
+            item.freelancer &&
+            typeof item.freelancer === "object" &&
+            setSelectedProfile(item.freelancer._id || item.freelancer.id)
+          }
           icon="👤"
         />
       </section>
@@ -320,14 +428,94 @@ export default function ContractDetails() {
           onClose={() => setSelectedProfile(null)}
         />
       )}
+
+      {showEdit && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          onClick={() => setShowEdit(false)}
+        >
+          <div
+            className="bg-gray-900/90 border border-gray-800 rounded-xl w-full max-w-lg p-5 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-white">
+                Edit Contract
+              </h3>
+              <button
+                onClick={() => setShowEdit(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-3">
+              <Field
+                label="Title"
+                value={editForm.title}
+                onChange={(v) => setEditForm({ ...editForm, title: v })}
+              />
+              <Field
+                label="Description"
+                value={editForm.description}
+                onChange={(v) => setEditForm({ ...editForm, description: v })}
+                multiline
+              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field
+                  label="Amount"
+                  value={editForm.amount}
+                  onChange={(v) => setEditForm({ ...editForm, amount: v })}
+                />
+                <Field
+                  label="Currency"
+                  value={editForm.currency}
+                  onChange={(v) => setEditForm({ ...editForm, currency: v })}
+                />
+              </div>
+              <Field
+                label="Deadline"
+                type="date"
+                value={editForm.deadline}
+                onChange={(v) => setEditForm({ ...editForm, deadline: v })}
+              />
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <button
+                onClick={handleUpdateContract}
+                disabled={actionLoading}
+                className="flex-1 px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white rounded-lg font-semibold transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? "Saving..." : "Save Changes"}
+              </button>
+              <button
+                onClick={() => setShowEdit(false)}
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-lg"
+              >
+                Cancel
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">
+              Editing is only allowed before funding. Deletion is limited to
+              Created/Invited contracts.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
-function InfoCard({ title, value, icon }) {
+function InfoCard({ title, value, icon, onClick }) {
+  const clickable = typeof onClick === "function";
   return (
-    <div className="p-3 md:p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
-      <div className="flex items-center justify-between">
+    <div
+      className={`p-3 md:p-4 rounded-xl bg-gray-900/60 border border-gray-800/60 ${clickable ? "cursor-pointer hover:border-cyan-500/50" : ""}`}
+      onClick={onClick}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+    >
+      <div className="flex items-center justify-between gap-2">
         <div className="min-w-0 flex-1">
           <p className="text-xs text-gray-400">{title}</p>
           <p className="text-base md:text-lg font-semibold truncate">{value}</p>
@@ -362,4 +550,27 @@ function getFreelancerDisplay(freelancer) {
     return `${name}${email}`;
   }
   return "Not Assigned";
+}
+
+function Field({ label, value, onChange, type = "text", multiline }) {
+  return (
+    <label className="block text-sm text-gray-300 space-y-1">
+      <span className="text-xs text-gray-400">{label}</span>
+      {multiline ? (
+        <textarea
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={4}
+        />
+      ) : (
+        <input
+          className="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm text-white"
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+        />
+      )}
+    </label>
+  );
 }

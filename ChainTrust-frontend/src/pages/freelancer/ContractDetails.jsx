@@ -3,6 +3,7 @@ import { useParams } from "react-router-dom";
 import Loader from "../../components/Loader.jsx";
 import StatusBadge from "../../components/StatusBadge.jsx";
 import EscrowBadge from "../../components/EscrowBadge.jsx";
+import ProfileModal from "../../components/ProfileModal.jsx";
 import { freelancerService } from "../../services/api.js";
 
 function formatAmount(amount, paymentType, currency) {
@@ -24,6 +25,7 @@ export default function ContractDetails() {
   const [hash, setHash] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -47,6 +49,7 @@ export default function ContractDetails() {
 
   const canSubmit = item && item.status === "Funded";
   const submitted = item && !!item.ipfsHash;
+  const isInvitedPending = item && item.status === "Invited";
 
   const submitWork = async (e) => {
     e.preventDefault();
@@ -80,6 +83,12 @@ export default function ContractDetails() {
           ⚠️ {error}
         </div>
       )}
+      {isInvitedPending && (
+        <div className="p-3 rounded-lg bg-blue-600/15 text-blue-100 border border-blue-500/30 text-sm">
+          📩 This contract is in "Invited" state. Please accept from the
+          Invitations page to start. Actions are disabled until accepted.
+        </div>
+      )}
       <header className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">{item.title}</h1>
@@ -98,6 +107,11 @@ export default function ContractDetails() {
         <InfoCard
           title="Client"
           value={`${item.client?.username || item.client?.name || "—"}${item.client?.email ? ` (${item.client.email})` : ""}`}
+          onClick={() =>
+            item.client &&
+            typeof item.client === "object" &&
+            setSelectedProfile(item.client._id || item.client.id)
+          }
           icon="👤"
         />
       </section>
@@ -149,15 +163,16 @@ export default function ContractDetails() {
               <div className="flex justify-end gap-2">
                 <button
                   type="submit"
-                  disabled={!canSubmit || saving}
+                  disabled={!canSubmit || saving || isInvitedPending}
                   className="px-4 py-2 rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 disabled:opacity-50"
                 >
                   {saving ? "Submitting..." : "Submit Work"}
                 </button>
               </div>
-              {!canSubmit && (
+              {(!canSubmit || isInvitedPending) && (
                 <p className="text-xs text-gray-400">
-                  Submission allowed only when escrow is funded.
+                  Submission allowed only when escrow is funded and the
+                  invitation is accepted.
                 </p>
               )}
             </form>
@@ -177,13 +192,26 @@ export default function ContractDetails() {
           )}
         </div>
       </section>
+
+      {selectedProfile && (
+        <ProfileModal
+          userId={selectedProfile}
+          onClose={() => setSelectedProfile(null)}
+        />
+      )}
     </div>
   );
 }
 
-function InfoCard({ title, value, icon }) {
+function InfoCard({ title, value, icon, onClick }) {
+  const clickable = typeof onClick === "function";
   return (
-    <div className="p-4 rounded-xl bg-gray-900/60 border border-gray-800/60">
+    <div
+      className={`p-4 rounded-xl bg-gray-900/60 border border-gray-800/60 ${clickable ? "cursor-pointer hover:border-cyan-500/50" : ""}`}
+      onClick={onClick}
+      role={clickable ? "button" : undefined}
+      tabIndex={clickable ? 0 : undefined}
+    >
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-gray-400">{title}</p>

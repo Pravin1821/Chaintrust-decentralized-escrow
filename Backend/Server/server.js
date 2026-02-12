@@ -81,12 +81,14 @@ const contractRouter = require("./Routers/ContractRouter");
 const freelancerRouter = require("./Routers/freelancerRouter");
 const disputeRouter = require("./Routers/DisputeRoutes");
 const adminRouter = require("./Routers/AdminRouter");
+const notificationRouter = require("./Routers/NotificationRouter");
 app.use("/api/auth", authLimiter, authRouter);
 app.use("/api", apiLimiter);
 app.use("/api/contracts", contractRouter);
 app.use("/api/freelancer", freelancerRouter);
 app.use("/api/disputes", disputeRouter);
 app.use("/api/users", adminRouter);
+app.use("/api/notifications", notificationRouter);
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });

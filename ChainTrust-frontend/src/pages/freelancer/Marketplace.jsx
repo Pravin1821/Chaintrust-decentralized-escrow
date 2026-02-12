@@ -186,9 +186,9 @@ export default function Marketplace() {
               className="px-3 sm:px-4 py-2 bg-gray-900/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm sm:text-base"
             >
               <option value="all">💰 All Budgets</option>
-              <option value="low">💵 &lt; $500</option>
-              <option value="medium">💸 $500 - $2000</option>
-              <option value="high">💎 &gt; $2000</option>
+              <option value="low">💵 &lt; ₹500</option>
+              <option value="medium">💸 ₹500 - ₹2000</option>
+              <option value="high">💎 &gt; ₹2000</option>
             </select>
           )}
         </div>
@@ -220,7 +220,7 @@ export default function Marketplace() {
           </div>
           <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-lg p-2.5 sm:p-3 border border-green-500/30">
             <div className="text-lg sm:text-2xl font-bold text-green-400">
-              $
+              ₹
               {filteredContracts
                 .reduce((sum, c) => sum + (c.amount || 0), 0)
                 .toLocaleString()}
@@ -556,7 +556,7 @@ function ContractCard({ contract, onApply, applying, onViewProfile }) {
           <div className="flex items-center gap-2 shrink-0">
             <div className="px-2 sm:px-3 py-1 bg-cyan-500/20 rounded-lg border border-cyan-500/30">
               <span className="text-sm sm:text-lg font-bold text-cyan-400">
-                ${contract.amount?.toLocaleString() || 0}
+                ₹{contract.amount?.toLocaleString() || 0}
               </span>
             </div>
           </div>

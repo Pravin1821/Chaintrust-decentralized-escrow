@@ -45,6 +45,14 @@ export default function ClientMarketplace() {
   };
 
   const handleInviteToContract = () => {
+    // Store the freelancer info in sessionStorage for better UX
+    sessionStorage.setItem(
+      "invitingFreelancer",
+      JSON.stringify({
+        id: selectedFreelancer._id || selectedFreelancer.id,
+        name: selectedFreelancer.username || selectedFreelancer.name,
+      }),
+    );
     navigate("/client/create", {
       state: { preselectedFreelancer: selectedFreelancer },
     });
@@ -104,7 +112,10 @@ export default function ClientMarketplace() {
       {/* Search */}
       <div className="bg-gray-800/40 rounded-xl p-3 sm:p-4 border border-gray-700/50">
         <div className="relative">
-          <LuSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <LuSearch
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            size={18}
+          />
           <input
             type="text"
             placeholder="Search by name, skills, or bio..."

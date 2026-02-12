@@ -1,4 +1,5 @@
 const contract = require("../Model/Contract");
+const NotificationController = require("./NotificationController");
 
 exports.getAssignedContracts = async (req, res) => {
   try {
@@ -12,7 +13,11 @@ exports.getAssignedContracts = async (req, res) => {
       "Resolved",
     ];
     const contracts = await contract
-      .find({ freelancer: req.user._id, status: { $in: statuses } })
+      .find({
+        freelancer: req.user._id,
+        status: { $in: statuses },
+        isDeleted: { $ne: true },
+      })
       .populate({ path: "client", select: "username email name" })
       .sort({ createdAt: -1 });
     res.status(200).json(contracts);
@@ -30,6 +35,9 @@ exports.submitWork = async (req, res) => {
     const existingContract = await contract.findById(contractId);
     if (!existingContract) {
       return res.status(404).json({ message: "Contract not found" });
+    }
+    if (existingContract.isDeleted) {
+      return res.status(400).json({ message: "Contract is deleted" });
     }
     if (existingContract.freelancer.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
@@ -49,6 +57,16 @@ exports.submitWork = async (req, res) => {
     existingContract.submittedAt = Date.now();
     existingContract.updatedAt = Date.now();
     await existingContract.save();
+
+    // Notify client
+    await NotificationController.createNotification(
+      existingContract.client,
+      "WORK_SUBMITTED",
+      "Work Submitted for Review",
+      `${req.user.username || req.user.name} has submitted work for "${existingContract.title}"`,
+      { contract: existingContract._id },
+    );
+
     res
       .status(200)
       .json({ message: "Work submitted successfully", existingContract });
@@ -56,11 +74,119 @@ exports.submitWork = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Accept an invitation to an assigned contract
+exports.acceptInvitation = async (req, res) => {
+  try {
+    const contractId = req.params.id;
+    const existingContract = await contract.findById(contractId);
+    if (!existingContract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+    const invitedId =
+      existingContract?.invitation?.invitedFreelancer?.toString();
+    if (!invitedId || invitedId !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    if (existingContract.status !== "Invited") {
+      return res
+        .status(400)
+        .json({ message: "Invitation is no longer active" });
+    }
+    if (existingContract.invitation?.status !== "Pending") {
+      return res.status(400).json({ message: "Invitation already responded" });
+    }
+
+    existingContract.status = "Assigned";
+    existingContract.freelancer = req.user._id;
+    existingContract.isPublic = false;
+    existingContract.invitation.status = "Accepted";
+    existingContract.invitation.declineReason = null;
+    existingContract.invitation.respondedAt = Date.now();
+    existingContract.acceptedAt = Date.now();
+    existingContract.updatedAt = Date.now();
+    await existingContract.save();
+
+    // Notify client that invite was accepted
+    await NotificationController.createNotification(
+      existingContract.client,
+      "CONTRACT_ASSIGNED",
+      "Invitation Accepted",
+      `${req.user.username || req.user.name || "Freelancer"} accepted your invitation for "${existingContract.title}"`,
+      { contract: existingContract._id },
+    );
+
+    res.status(200).json({
+      message: "Invitation accepted",
+      contract: existingContract,
+    });
+  } catch (error) {
+    console.error("acceptInvitation error", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+// Decline an invitation and reopen the contract to the marketplace
+exports.declineInvitation = async (req, res) => {
+  try {
+    const contractId = req.params.id;
+    const { reason } = req.body;
+    const existingContract = await contract.findById(contractId);
+    if (!existingContract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+    const invitedId =
+      existingContract?.invitation?.invitedFreelancer?.toString();
+    if (!invitedId || invitedId !== req.user._id.toString()) {
+      return res.status(403).json({ message: "Unauthorized" });
+    }
+    if (existingContract.status !== "Invited") {
+      return res
+        .status(400)
+        .json({ message: "Only active invitations can be declined" });
+    }
+    if (existingContract.invitation?.status !== "Pending") {
+      return res.status(400).json({ message: "Invitation already responded" });
+    }
+
+    existingContract.freelancer = null;
+    existingContract.status = "Created";
+    existingContract.isPublic = true;
+    existingContract.invitation.status = "Declined";
+    existingContract.invitation.declineReason = reason || "No reason provided";
+    existingContract.invitation.respondedAt = Date.now();
+    existingContract.declinedAt = Date.now();
+    existingContract.acceptedAt = null;
+    existingContract.updatedAt = Date.now();
+    await existingContract.save();
+
+    // Notify client that invite was declined
+    await NotificationController.createNotification(
+      existingContract.client,
+      "CONTRACT_INVITED",
+      "Invitation Declined",
+      `${req.user.username || req.user.name || "Freelancer"} declined your invitation for "${existingContract.title}"`,
+      { contract: existingContract._id },
+    );
+
+    res.status(200).json({
+      message: "Invitation declined and contract reopened",
+      contract: existingContract,
+    });
+  } catch (error) {
+    console.error("declineInvitation error", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 exports.getConntractById = async (req, res) => {
   try {
     const contractId = req.params.id;
     const existingContract = await contract
-      .findOne({ _id: contractId, freelancer: req.user._id })
+      .findOne({
+        _id: contractId,
+        freelancer: req.user._id,
+        isDeleted: { $ne: true },
+      })
       .populate({ path: "client", select: "username email name" });
     if (!existingContract) {
       return res.status(404).json({ message: "Contract not found" });
@@ -78,10 +204,16 @@ exports.applyToContract = async (req, res) => {
     if (!existingContract) {
       return res.status(404).json({ message: "Contract not found" });
     }
+    if (existingContract.isDeleted) {
+      return res.status(400).json({ message: "Contract is deleted" });
+    }
     if (existingContract.status !== "Created") {
       return res
         .status(400)
         .json({ message: "Can only apply to Created contracts" });
+    }
+    if (existingContract.isPublic === false) {
+      return res.status(400).json({ message: "Contract is not public" });
     }
     const hasApplied = existingContract.applications.some(
       (app) => app.freelancer.toString() === freelancerId,
@@ -93,6 +225,16 @@ exports.applyToContract = async (req, res) => {
     }
     existingContract.applications.push({ freelancer: freelancerId });
     await existingContract.save();
+
+    // Notify client
+    await NotificationController.createNotification(
+      existingContract.client,
+      "APPLICATION_RECEIVED",
+      "New Contract Application",
+      `${req.user.username || req.user.name} has applied to your contract "${existingContract.title}"`,
+      { contract: existingContract._id },
+    );
+
     res
       .status(200)
       .json({ message: "Applied to contract successfully", existingContract });
@@ -105,9 +247,9 @@ exports.getFreelancerList = async (req, res) => {
   try {
     const User = require("../Model/User");
     const freelancers = await User.find({
-      role: "freelancer",
+      role: { $in: ["Freelancer", "freelancer"] },
       isActive: true,
-    }).select("-password");
+    }).select("-password -phone -phoneNumber -isPhoneVerified");
 
     // Enrich with stats from contracts
     const enrichedFreelancers = await Promise.all(

@@ -12,6 +12,8 @@ exports.register = async (req, res) => {
       permissions,
       department,
       name,
+      phone,
+      phoneNumber,
     } = req.body;
 
     if (!username && name) {
@@ -46,6 +48,12 @@ exports.register = async (req, res) => {
       password: hashedPassword,
       role: normalizedRole,
       walletAddress,
+      phone: phone ? String(phone).trim() : null,
+      phoneNumber: phoneNumber
+        ? String(phoneNumber).trim()
+        : phone
+          ? String(phone).trim()
+          : null,
     });
     if (role === "admin") {
       newUser.permissions = permissions || [];
@@ -69,6 +77,9 @@ exports.register = async (req, res) => {
       isActive: newUser.isActive,
       createdAt: newUser.createdAt,
       reputation: newUser.reputation,
+      phone: newUser.phone,
+      phoneNumber: newUser.phoneNumber,
+      isPhoneVerified: newUser.isPhoneVerified,
       token,
     });
   } catch (error) {
@@ -111,6 +122,9 @@ exports.login = async (req, res) => {
       isActive: existingUser.isActive,
       createdAt: existingUser.createdAt,
       reputation: existingUser.reputation,
+      phone: existingUser.phone,
+      phoneNumber: existingUser.phoneNumber,
+      isPhoneVerified: existingUser.isPhoneVerified,
       token,
     });
   } catch (error) {
@@ -127,6 +141,10 @@ exports.update = async (req, res) => {
       payload.email = req.body.email.trim();
     if (typeof req.body.walletAddress === "string")
       payload.walletAddress = req.body.walletAddress.trim();
+    if (typeof req.body.phone === "string")
+      payload.phone = req.body.phone.trim();
+    if (typeof req.body.phoneNumber === "string")
+      payload.phoneNumber = req.body.phoneNumber.trim();
     if (req.body.password) {
       payload.password = await bcrypt.hash(req.body.password, 10);
     }
@@ -174,7 +192,32 @@ exports.getUserById = async (req, res) => {
     if (!targetUser) {
       return res.status(404).json({ message: "User not found" });
     }
-    res.status(200).json(targetUser);
+    const requesterId = req.user?._id?.toString();
+    const isSelf = requesterId && requesterId === targetUser._id.toString();
+
+    let canViewPhone = false;
+    if (!isSelf && requesterId) {
+      const Contract = require("../Model/Contract");
+      const relation = await Contract.findOne({
+        isDeleted: { $ne: true },
+        $or: [
+          { client: requesterId, freelancer: targetUser._id },
+          { client: targetUser._id, freelancer: requesterId },
+        ],
+      }).select("_id status");
+      if (relation) {
+        canViewPhone = true;
+      }
+    }
+
+    const sanitized = targetUser.toObject();
+    if (!canViewPhone && !isSelf) {
+      delete sanitized.phone;
+      delete sanitized.phoneNumber;
+      delete sanitized.isPhoneVerified;
+    }
+
+    res.status(200).json(sanitized);
   } catch (error) {
     console.error("[AuthController] GetUserById error:", error);
     res.status(500).json({ message: "Server error" });

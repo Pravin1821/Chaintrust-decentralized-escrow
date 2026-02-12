@@ -166,7 +166,7 @@ export default function AdminDisputes() {
                         {new Date(dispute.createdAt).toLocaleDateString()}
                       </span>
                       <span className="flex items-center gap-1">
-                        <LuDollarSign size={14} />$
+                        <LuDollarSign size={14} />₹
                         {contract?.escrowAmount?.toLocaleString() || 0}
                       </span>
                     </div>

@@ -109,7 +109,7 @@ export default function AdminDashboard() {
     },
     {
       title: "Escrow Funded",
-      value: `$${stats.totalEscrowFunded.toLocaleString()}`,
+      value: `₹${stats.totalEscrowFunded.toLocaleString()}`,
       subtitle: "Total locked in escrow",
       icon: LuDollarSign,
       color: "from-green-500 to-emerald-600",

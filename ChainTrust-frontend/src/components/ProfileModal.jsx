@@ -132,6 +132,18 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                   <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
                     <span>⭐ Reputation: {profile.reputation || 0}</span>
                   </div>
+                  <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-300">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500">Email:</span>
+                      <span className="truncate">{profile.email || "—"}</span>
+                    </div>
+                    {profile.phoneNumber && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-500">Phone:</span>
+                        <span className="truncate">{profile.phoneNumber}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -210,6 +222,14 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                     <span className="text-gray-400">Email:</span>
                     <span className="ml-2 text-white">{profile.email}</span>
                   </div>
+                  {profile.phoneNumber && (
+                    <div>
+                      <span className="text-gray-400">Phone:</span>
+                      <span className="ml-2 text-white">
+                        {profile.phoneNumber}
+                      </span>
+                    </div>
+                  )}
                   <div>
                     <span className="text-gray-400">Member since:</span>
                     <span className="ml-2 text-white">
