@@ -63,6 +63,25 @@ const contractSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  escrow: {
+    amount: {
+      type: Number,
+      default: 0,
+    },
+    fundedAt: {
+      type: Date,
+      default: null,
+    },
+    transactionId: {
+      type: String,
+      default: null,
+    },
+    status: {
+      type: String,
+      enum: ["NotFunded", "Funded", "Released", "Refunded"],
+      default: "NotFunded",
+    },
+  },
   escrowStatus: {
     type: String,
     enum: ["NotFunded", "Funded", "Refunded"],

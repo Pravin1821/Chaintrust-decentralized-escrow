@@ -145,6 +145,16 @@ exports.update = async (req, res) => {
       payload.phone = req.body.phone.trim();
     if (typeof req.body.phoneNumber === "string")
       payload.phoneNumber = req.body.phoneNumber.trim();
+    if (Array.isArray(req.body.skills)) {
+      payload.skills = req.body.skills
+        .map((s) => (typeof s === "string" ? s.trim() : ""))
+        .filter(Boolean);
+    } else if (typeof req.body.skills === "string") {
+      payload.skills = req.body.skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    }
     if (req.body.password) {
       payload.password = await bcrypt.hash(req.body.password, 10);
     }

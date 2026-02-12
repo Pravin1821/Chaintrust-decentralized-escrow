@@ -51,15 +51,13 @@ export default function FreelancerProfile() {
           phoneNumber: u.phoneNumber || "",
         });
 
-        // UI-only skills stored in localStorage
-        try {
-          const storedSkills = localStorage.getItem(`skills_${u._id}`);
-          if (storedSkills) {
-            setSkills(storedSkills);
-          } else {
-            setSkills("React, Node.js, MongoDB, Web3");
-          }
-        } catch {}
+        // Load skills from backend user profile
+        const skillsFromUser = Array.isArray(u.skills) ? u.skills : [];
+        setSkills(
+          skillsFromUser.length > 0
+            ? skillsFromUser.join(", ")
+            : "React, Node.js, MongoDB, Web3",
+        );
 
         // Load freelancer activity stats
         try {
@@ -165,14 +163,26 @@ export default function FreelancerProfile() {
     }
   };
 
-  const saveSkills = () => {
+  const saveSkills = async () => {
+    if (!user?._id) return;
+    setSkillsMessage(null);
     try {
-      if (!user?._id) return;
-      localStorage.setItem(`skills_${user._id}`, skills);
-      setSkillsMessage("✅ Skills saved (local only)");
-      setTimeout(() => setSkillsMessage(null), 2000);
-    } catch {
-      setSkillsMessage("Failed to save skills locally");
+      const normalizedSkills = skills
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const updated = await updateProfile({ skills: normalizedSkills });
+      setUser(updated);
+      setSkills(
+        Array.isArray(updated.skills) && updated.skills.length
+          ? updated.skills.join(", ")
+          : "",
+      );
+      setSkillsMessage("✅ Skills saved");
+    } catch (e) {
+      setSkillsMessage(
+        e?.response?.data?.message || "Failed to save skills to server",
+      );
     }
   };
 
@@ -420,7 +430,7 @@ export default function FreelancerProfile() {
               ))}
             </div>
             <p className="text-[10px] text-gray-400 mb-2">
-              Edit skills below (frontend only)
+              Edit skills below (saved to your profile)
             </p>
             <textarea
               value={skills}

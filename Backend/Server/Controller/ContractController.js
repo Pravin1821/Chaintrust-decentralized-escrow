@@ -246,11 +246,9 @@ exports.deleteContract = async (req, res) => {
       return res.status(400).json({ message: "Contract already deleted" });
     }
     if (!["Created", "Invited"].includes(existingContract.status)) {
-      return res
-        .status(400)
-        .json({
-          message: "Contract can only be deleted before assignment/funding",
-        });
+      return res.status(400).json({
+        message: "Contract can only be deleted before assignment/funding",
+      });
     }
 
     // Notify assigned freelancer about cancellation
@@ -280,24 +278,42 @@ exports.deleteContract = async (req, res) => {
 exports.fundContract = async (req, res) => {
   try {
     const contract = req.contract;
+    if (!contract) {
+      return res.status(404).json({ message: "Contract not found" });
+    }
+
+    // Ensure requester is the client
+    if ((req.user?.role || "").toLowerCase() !== "client") {
+      return res.status(403).json({ message: "Forbidden: Clients only" });
+    }
     if (contract.client.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Unauthorized" });
     }
     if (contract.isDeleted) {
       return res.status(400).json({ message: "Contract is deleted" });
     }
-    if (contract.escrowStatus === "Funded") {
-      return res.status(400).json({ message: "Contract already funded" });
-    }
-    if (contract.status === "Disputed") {
+    if (contract.status !== "Assigned") {
       return res
         .status(400)
-        .json({ message: "Cannot fund a disputed contract" });
+        .json({ message: "Contract must be in Assigned status to fund" });
     }
+    if (contract.escrow?.status === "Funded") {
+      return res.status(400).json({ message: "Contract already funded" });
+    }
+
+    const transactionId = `txn_${Math.random().toString(36).slice(2, 10)}`;
+    const fundedAt = new Date();
+
     contract.status = "Funded";
-    contract.escrowStatus = "Funded";
-    contract.fundedAt = Date.now();
-    contract.updatedAt = Date.now();
+    contract.escrowStatus = "Funded"; // maintain legacy field
+    contract.fundedAt = fundedAt;
+    contract.updatedAt = fundedAt;
+    contract.escrow = {
+      amount: contract.amount,
+      fundedAt,
+      transactionId,
+      status: "Funded",
+    };
     await contract.save();
 
     // Notify freelancer
@@ -374,12 +390,10 @@ exports.requestRevision = async (req, res) => {
       { contract: existingContract._id },
     );
 
-    res
-      .status(200)
-      .json({
-        message: "Revision request submitted",
-        contract: existingContract,
-      });
+    res.status(200).json({
+      message: "Revision request submitted",
+      contract: existingContract,
+    });
   } catch (error) {
     console.error("requestRevision error", error);
     res.status(500).json({ message: "Server error" });

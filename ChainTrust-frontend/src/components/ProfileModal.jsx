@@ -11,6 +11,8 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const isFreelancer = profile?.role?.toLowerCase() === "freelancer";
+  const skills = Array.isArray(profile?.skills) ? profile.skills : [];
 
   useEffect(() => {
     if (userId) {
@@ -28,7 +30,7 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
       setProfile(userData);
 
       // Fetch user's contract stats (only for freelancers)
-      if (userData.role === "Freelancer") {
+      if (userData.role?.toLowerCase() === "freelancer") {
         try {
           const { data: contractData } = await api.get(
             `/contracts/user/${userId}/stats`,
@@ -120,12 +122,12 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                   <div className="flex items-center gap-2 mt-1">
                     <span
                       className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-                        profile.role === "Freelancer"
+                        isFreelancer
                           ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
                           : "bg-blue-500/20 text-blue-300 border border-blue-500/30"
                       }`}
                     >
-                      {profile.role === "Freelancer" ? "🎯" : "👤"}{" "}
+                      {isFreelancer ? "🎯" : "👤"}{" "}
                       {profile.role?.toUpperCase()}
                     </span>
                   </div>
@@ -148,7 +150,7 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
               </div>
 
               {/* Reputation Summary */}
-              {profile.role === "Freelancer" && (
+              {isFreelancer && (
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/30">
                     <div className="text-2xl font-bold text-green-400">
@@ -178,40 +180,72 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
               )}
 
               {/* Contract History */}
-              {profile.role === "Freelancer" && contracts.length > 0 && (
+              {isFreelancer && (
                 <div>
                   <h4 className="text-lg font-semibold text-white mb-3">
                     📜 Recent Contracts
                   </h4>
-                  <div className="space-y-3">
-                    {contracts.slice(0, 5).map((contract) => (
-                      <div
-                        key={contract._id}
-                        className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <h5 className="font-semibold text-white">
-                              {contract.title}
-                            </h5>
-                            <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
-                              <span>
-                                💰 ${contract.amount.toLocaleString()}
-                              </span>
-                              <span>•</span>
-                              <span>
-                                📅{" "}
-                                {new Date(
-                                  contract.createdAt,
-                                ).toLocaleDateString()}
-                              </span>
+                  {contracts.length > 0 ? (
+                    <div className="space-y-3">
+                      {contracts.slice(0, 5).map((contract) => (
+                        <div
+                          key={contract._id}
+                          className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex-1">
+                              <h5 className="font-semibold text-white">
+                                {contract.title}
+                              </h5>
+                              <div className="flex items-center gap-2 mt-2 text-sm text-gray-400">
+                                <span>
+                                  💰 ${contract.amount.toLocaleString()}
+                                </span>
+                                <span>•</span>
+                                <span>
+                                  📅{" "}
+                                  {new Date(
+                                    contract.createdAt,
+                                  ).toLocaleDateString()}
+                                </span>
+                              </div>
                             </div>
+                            <StatusBadge status={contract.status} />
                           </div>
-                          <StatusBadge status={contract.status} />
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50 text-sm text-gray-400">
+                      No contracts yet. Invite this freelancer to kick off their first project.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Skills */}
+              {isFreelancer && (
+                <div className="bg-gray-800/40 rounded-lg p-4 border border-gray-700/50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-lg">🧠</span>
+                    <h4 className="text-lg font-semibold text-white">Skills</h4>
                   </div>
+                  {skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill) => (
+                        <span
+                          key={skill}
+                          className="px-3 py-1 bg-cyan-600/20 text-cyan-200 rounded-full border border-cyan-500/30 text-xs font-medium"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400">
+                      No skills added yet.
+                    </p>
+                  )}
                 </div>
               )}
 

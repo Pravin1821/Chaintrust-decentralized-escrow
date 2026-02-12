@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ContractCard from "../../components/ContractCard.jsx";
 import Loader from "../../components/Loader.jsx";
+import PaymentModal from "../../components/PaymentModal.jsx";
 import { clientContractService } from "../../services/api.js";
 
 export default function MyContracts() {
@@ -10,6 +11,7 @@ export default function MyContracts() {
   const [error, setError] = useState(null);
   const [selectedContract, setSelectedContract] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [payingContract, setPayingContract] = useState(null);
   const navigate = useNavigate();
   const hasFetchedRef = useRef(false);
 
@@ -58,16 +60,21 @@ export default function MyContracts() {
     }
   };
 
-  const onFund = async (item) => {
-    const amount = prompt("Enter amount to fund (number):", item.amount);
-    if (!amount) return;
+  const onFund = (item) => {
+    setPayingContract(item);
+  };
+
+  const handlePaymentSuccess = async () => {
+    if (!payingContract) return;
     try {
       setActionLoading(true);
-      await clientContractService.fundContract(item._id || item.id, {
-        amount: Number(amount),
-      });
+      await clientContractService.fundContract(
+        payingContract._id || payingContract.id,
+        {},
+      );
       alert("✅ Funded successfully");
-      await fetchContracts(); // Refresh
+      setPayingContract(null);
+      await fetchContracts();
     } catch (e) {
       alert(e.response?.data?.message || "Failed to fund");
     } finally {
@@ -197,6 +204,14 @@ export default function MyContracts() {
             </button>
           </div>
         </div>
+      )}
+
+      {payingContract && (
+        <PaymentModal
+          contract={payingContract}
+          onSuccess={handlePaymentSuccess}
+          onClose={() => setPayingContract(null)}
+        />
       )}
     </>
   );

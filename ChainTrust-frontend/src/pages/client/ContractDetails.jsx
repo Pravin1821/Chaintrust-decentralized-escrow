@@ -3,6 +3,9 @@ import { useParams } from "react-router-dom";
 import Loader from "../../components/Loader.jsx";
 import StatusBadge from "../../components/StatusBadge.jsx";
 import ProfileModal from "../../components/ProfileModal.jsx";
+import PaymentModal from "../../components/PaymentModal.jsx";
+import EscrowVaultCard from "../../components/EscrowVaultCard.jsx";
+import api from "../../api/axios";
 import { clientContractService } from "../../services/api.js";
 
 export default function ContractDetails() {
@@ -14,6 +17,7 @@ export default function ContractDetails() {
   const [selectedProfile, setSelectedProfile] = useState(null);
   const [showApplications, setShowApplications] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showPayModal, setShowPayModal] = useState(false);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -64,15 +68,27 @@ export default function ContractDetails() {
   };
 
   const handleFundEscrow = async () => {
+    if (actionLoading) return;
+    const ok = window.confirm(
+      "Fund escrow now? This will lock funds until work is approved.",
+    );
+    if (!ok) return;
+    setShowPayModal(true);
+  };
+
+  const handlePaymentSuccess = async () => {
     try {
       setActionLoading(true);
-      await clientContractService.fundContract(id);
+      // Backend expects /contracts/fundContract/:id
+      await clientContractService.fundContract(id, {});
       await fetchContract();
-      alert("Escrow funded successfully!");
+      alert("Escrow funded successfully");
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to fund escrow");
+      const msg = err?.response?.data?.message || "Failed to fund escrow";
+      alert(msg);
     } finally {
       setActionLoading(false);
+      setShowPayModal(false);
     }
   };
 
@@ -165,43 +181,34 @@ export default function ContractDetails() {
         );
 
       case "Assigned":
-        if (escrowStatus !== "Funded") {
-          return (
-            <div className="space-y-2">
-              <button
-                onClick={handleFundEscrow}
-                disabled={actionLoading}
-                className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all disabled:opacity-50"
-              >
-                {actionLoading ? "Processing..." : "💰 Fund Escrow"}
-              </button>
-              <p className="text-xs text-gray-400 text-center">
-                Fund the contract to allow work to begin
-              </p>
-              <div className="flex flex-col sm:flex-row gap-2 pt-1">
-                <button
-                  onClick={() => setShowEdit(true)}
-                  disabled={isFunded || !canEdit}
-                  className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
-                >
-                  ✏️ Edit
-                </button>
-                <button
-                  onClick={handleDeleteContract}
-                  disabled={!canDelete || actionLoading}
-                  className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
-                >
-                  {actionLoading ? "Deleting..." : "🗑️ Delete"}
-                </button>
-              </div>
-            </div>
-          );
-        }
         return (
-          <div className="p-3 bg-blue-600/20 border border-blue-500/30 rounded-lg text-center">
-            <p className="text-blue-400 text-sm">
-              ⏳ Escrow funded - Freelancer is working
+          <div className="space-y-2">
+            <button
+              onClick={handleFundEscrow}
+              disabled={actionLoading}
+              className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-semibold rounded-lg transition-all disabled:opacity-50"
+            >
+              {actionLoading ? "Processing..." : "💰 Fund Escrow"}
+            </button>
+            <p className="text-xs text-gray-400 text-center">
+              Fund the contract to allow work to begin
             </p>
+            <div className="flex flex-col sm:flex-row gap-2 pt-1">
+              <button
+                onClick={() => setShowEdit(true)}
+                disabled={!canEdit}
+                className="flex-1 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+              >
+                ✏️ Edit
+              </button>
+              <button
+                onClick={handleDeleteContract}
+                disabled={!canDelete || actionLoading}
+                className="flex-1 px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white text-sm rounded-lg transition-colors disabled:opacity-50"
+              >
+                {actionLoading ? "Deleting..." : "🗑️ Delete"}
+              </button>
+            </div>
           </div>
         );
 
@@ -366,6 +373,13 @@ export default function ContractDetails() {
         {renderActionButtons()}
       </section>
 
+      {/* Escrow Vault */}
+      {item.status === "Funded" && (
+        <section className="p-3 md:p-4 bg-gray-900/40 border border-gray-800/50 rounded-xl">
+          <EscrowVaultCard contract={item} />
+        </section>
+      )}
+
       {/* Applications Section */}
       {showApplications &&
         item.applications &&
@@ -501,6 +515,10 @@ export default function ContractDetails() {
             </p>
           </div>
         </div>
+      )}
+
+      {showPayModal && item && (
+        <PaymentModal contract={item} onSuccess={handlePaymentSuccess} />
       )}
     </div>
   );
