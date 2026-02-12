@@ -45,7 +45,10 @@ export default function Profile() {
 
   const reputationScore = useMemo(() => {
     return (
-      (user?.reputation?.score ?? user?.reputationScore ?? Number(user?.reputation)) || 0
+      (user?.reputation?.score ??
+        user?.reputationScore ??
+        Number(user?.reputation)) ||
+      0
     );
   }, [user]);
   const reputationLevel = useMemo(() => {
@@ -290,12 +293,12 @@ export default function Profile() {
                   >
                     {user.isActive ? "Active" : "Suspended"}
                   </span>
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] sm:text-xs rounded-full bg-amber-500/15 text-amber-100 border border-amber-400/30 whitespace-nowrap">
-                      ⭐ {reputationScore.toFixed(1)}
-                    </span>
-                    <span className="px-2 py-0.5 text-[10px] sm:text-xs rounded-full bg-gray-800/60 text-cyan-200 border border-gray-700/60 whitespace-nowrap">
-                      {reputationLevel}
-                    </span>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 text-[10px] sm:text-xs rounded-full bg-amber-500/15 text-amber-100 border border-amber-400/30 whitespace-nowrap">
+                    ⭐ {reputationScore.toFixed(1)}
+                  </span>
+                  <span className="px-2 py-0.5 text-[10px] sm:text-xs rounded-full bg-gray-800/60 text-cyan-200 border border-gray-700/60 whitespace-nowrap">
+                    {reputationLevel}
+                  </span>
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   Joined:{" "}

@@ -40,7 +40,10 @@ export default function FreelancerProfile() {
 
   const reputationScore = useMemo(() => {
     return (
-      (user?.reputation?.score ?? user?.reputationScore ?? Number(user?.reputation)) || 0
+      (user?.reputation?.score ??
+        user?.reputationScore ??
+        Number(user?.reputation)) ||
+      0
     );
   }, [user]);
   const reputationLevel = useMemo(() => {

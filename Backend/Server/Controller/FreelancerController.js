@@ -280,7 +280,8 @@ exports.getFreelancerList = async (req, res) => {
         ).length;
 
         const plain = freelancer.toObject();
-        const repScore = Number(plain.reputation?.score ?? plain.reputation) || 0;
+        const repScore =
+          Number(plain.reputation?.score ?? plain.reputation) || 0;
         const repLevel = plain.reputation?.level || "New";
 
         return {

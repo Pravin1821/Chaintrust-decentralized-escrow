@@ -136,7 +136,10 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                   </div>
                   <div className="flex flex-wrap items-center gap-2 mt-2 text-sm text-gray-400">
                     <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-amber-500/15 text-amber-200 border border-amber-400/30">
-                      ⭐ <span className="font-semibold text-white">{reputationScore}</span>
+                      ⭐{" "}
+                      <span className="font-semibold text-white">
+                        {reputationScore}
+                      </span>
                     </span>
                     <span className="px-2 py-1 bg-gray-800/60 border border-gray-700/50 rounded-full text-xs text-cyan-200">
                       {reputationLevel}
@@ -145,12 +148,16 @@ export default function ProfileModal({ userId, onClose, onInvite }) {
                   <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm text-gray-300">
                     <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
                       <p className="text-xs text-gray-500">Email</p>
-                      <p className="truncate font-medium text-white">{profile.email || "—"}</p>
+                      <p className="truncate font-medium text-white">
+                        {profile.email || "—"}
+                      </p>
                     </div>
                     {profile.phoneNumber && (
                       <div className="p-3 rounded-lg bg-gray-800/50 border border-gray-700/50">
                         <p className="text-xs text-gray-500">Phone</p>
-                        <p className="truncate font-medium text-white">{profile.phoneNumber}</p>
+                        <p className="truncate font-medium text-white">
+                          {profile.phoneNumber}
+                        </p>
                       </div>
                     )}
                   </div>
