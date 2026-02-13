@@ -111,3 +111,55 @@
 .read-the-docs {
   color: #888;
 }
+
+/* Soft shimmer for trust badge and ctas */
+.shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    120deg,
+    transparent 10%,
+    rgba(255, 255, 255, 0.08) 40%,
+    rgba(255, 255, 255, 0.14) 50%,
+    transparent 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 50%;
+  }
+  100% {
+    background-position: -200% 50%;
+  }
+}
+
+/* Mouse-follow glow container helper */
+.mouse-glow {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.mouse-glow::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.18), transparent 65%);
+  filter: blur(20px);
+  transform: translate(-50%, -50%);
+  transition: transform 0.18s ease, opacity 0.3s ease;
+  opacity: 0.75;
+}

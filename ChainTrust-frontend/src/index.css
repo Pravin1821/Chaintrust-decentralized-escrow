@@ -1,5 +1,9 @@
 @import 'tailwindcss';
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* Crazy Animations for Student Developer Vibes */
 @keyframes blob {
   0%, 100% {

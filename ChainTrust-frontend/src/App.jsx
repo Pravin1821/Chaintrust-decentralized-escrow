@@ -26,6 +26,7 @@ import AdminContracts from "./pages/admin/AdminContracts.jsx";
 import AdminUsers from "./pages/admin/AdminUsers.jsx";
 import AdminMarketplace from "./pages/admin/AdminMarketplace.jsx";
 import AdminProfile from "./pages/admin/AdminProfile.jsx";
+import Landing from "./pages/Landing.jsx";
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -46,8 +47,9 @@ function RootRedirect() {
 function App() {
   return (
     <Routes>
-      {/* Root redirect */}
-      <Route path="/" element={<RootRedirect />} />
+      {/* Public landing */}
+      <Route path="/" element={<Landing />} />
+      <Route path="/app" element={<RootRedirect />} />
 
       {/* Public */}
       <Route path="/login" element={<Auth />} />
@@ -104,7 +106,7 @@ function App() {
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to="/login" />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
