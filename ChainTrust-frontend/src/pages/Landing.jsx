@@ -282,7 +282,10 @@ function Landing() {
               ))}
             </nav>
             <div className="flex items-center gap-2">
-              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 <Link
                   to="/login"
                   className="hidden rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2 text-sm text-slate-200 transition-colors hover:border-cyan-400/80 hover:text-cyan-100 sm:inline-flex"
@@ -290,7 +293,10 @@ function Landing() {
                   Login
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}>
+              <motion.div
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 <Link
                   to="/register"
                   className="inline-flex items-center rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-cyan-500/60"
@@ -332,7 +338,9 @@ function Landing() {
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white">
                       CT
                     </div>
-                    <span className="text-sm font-semibold text-slate-100">ChainTrust</span>
+                    <span className="text-sm font-semibold text-slate-100">
+                      ChainTrust
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -413,7 +421,10 @@ function Landing() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
               >
-                <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+                <motion.div
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                >
                   <Link
                     to="/register"
                     className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-cyan-500/60"
@@ -422,7 +433,10 @@ function Landing() {
                     <span aria-hidden>→</span>
                   </Link>
                 </motion.div>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.div
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <a
                     href="#how-it-works"
                     className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-4 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/70 hover:text-cyan-100"
@@ -540,9 +554,14 @@ function Landing() {
                           className="flex items-center gap-2"
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.2 + idx * 0.15, duration: 0.35 }}
+                          transition={{
+                            delay: 0.2 + idx * 0.15,
+                            duration: 0.35,
+                          }}
                         >
-                          <span className={`h-2 w-2 rounded-full ${item.color}`} />
+                          <span
+                            className={`h-2 w-2 rounded-full ${item.color}`}
+                          />
                           <span>{item.text}</span>
                         </motion.div>
                       ))}
@@ -570,7 +589,10 @@ function Landing() {
                   How It Works
                 </h2>
               </div>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
                 <Link
                   to="/register"
                   className="hidden items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/70 hover:text-cyan-100 sm:inline-flex"
@@ -595,7 +617,9 @@ function Landing() {
                   <h3 className="text-lg font-semibold text-slate-50">
                     {step.title}
                   </h3>
-                  <p className="mt-2 text-sm text-slate-300">{step.description}</p>
+                  <p className="mt-2 text-sm text-slate-300">
+                    {step.description}
+                  </p>
                 </motion.div>
               ))}
             </div>
@@ -725,7 +749,10 @@ function Landing() {
                   </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-3">
-                  <motion.div whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}>
+                  <motion.div
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
                     <Link
                       to="/register"
                       className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-cyan-500/30 transition hover:shadow-cyan-500/60"
@@ -733,7 +760,10 @@ function Landing() {
                       Create Account
                     </Link>
                   </motion.div>
-                  <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
+                  <motion.div
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
                     <Link
                       to="/login"
                       className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900/60 px-5 py-2.5 text-sm font-semibold text-slate-100 transition hover:border-cyan-400/70 hover:text-cyan-100"
